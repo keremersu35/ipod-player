@@ -1,8 +1,7 @@
 import SwiftUI
-import MusicKit
 
 struct CollectionMenuModel: Equatable {
-    let artwork: Artwork?
+    let artwork: ArtworkRef?
     let name: String
     let description: String
 }
@@ -43,15 +42,7 @@ struct CollectionMenuItem: View {
         )
     }
 
-    @ViewBuilder
     private var artworkView: some View {
-        if let artwork = model.artwork {
-            ArtworkImage(artwork, width: 50, height: 50)
-        } else {
-            Image(ImageNames.Custom.coverPlaceholder)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 50, height: 50)
-        }
+        ArtworkView(artwork: model.artwork, width: 50, height: 50)
     }
 }

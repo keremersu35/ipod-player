@@ -5,9 +5,9 @@ struct PlayerView: View {
     let source: PlaybackSource?
     let trackIndex: Int
     let isFromCoverFlow: Bool
-    var initialArtwork: Artwork?
+    var initialArtwork: ArtworkRef?
     var onDismissFromCoverFlow: (() -> Void)? = nil
-    @State private var activeArtwork: Artwork?
+    @State private var activeArtwork: ArtworkRef?
     @Environment(\.navigate) private var navigate
     @Environment(iPlayrButtonController.self) private var iPlayrController
     @Environment(AppleMusicManager.self) private var playerManager
@@ -46,7 +46,7 @@ struct PlayerView: View {
             if let artwork = initialArtwork {
                 activeArtwork = artwork
             } else {
-                activeArtwork = playerManager.currentTrack?.artwork
+                activeArtwork = playerManager.currentTrack?.artwork.map(ArtworkRef.appleMusic)
             }
             if !isFromCoverFlow {
                 currentDegree = finalRotation
@@ -112,7 +112,7 @@ struct PlayerView: View {
                 HStack(spacing: 24) {
                     ZStack {
                         if let image = activeArtwork {
-                            ArtworkImage(image, width: Self.artworkSize)
+                            ArtworkView(artwork: image, width: Self.artworkSize)
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: Self.artworkSize, height: Self.artworkSize)
                                 .reflection()
@@ -142,7 +142,7 @@ struct PlayerView: View {
                     .frame(width: Self.artworkSize, height: Self.artworkSize)
                     .onChange(of: playerManager.currentTrack) { _, newValue in
                         if let newArtwork = newValue?.artwork {
-                            activeArtwork = newArtwork
+                            activeArtwork = .appleMusic(newArtwork)
                         }
                     }
 

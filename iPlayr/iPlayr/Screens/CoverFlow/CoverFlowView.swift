@@ -46,7 +46,7 @@ struct CoverFlowView: View {
                         source: .album(id: albums[selectedIndex].id.rawValue),
                         trackIndex: selectedTrackIndex,
                         isFromCoverFlow: true,
-                        initialArtwork: albums[selectedIndex].artwork,
+                        initialArtwork: albums[selectedIndex].artwork.map(ArtworkRef.appleMusic),
                         onDismissFromCoverFlow: handleMenuAction
                     )
                     .id(playerViewId)

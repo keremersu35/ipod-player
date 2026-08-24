@@ -32,7 +32,7 @@ struct AlbumCover: View {
     private var albumArtwork: some View {
         Group {
             if let artwork = album.artwork {
-                ArtworkImage(artwork, width: CoverFlowMetrics.coverSize, height: CoverFlowMetrics.coverSize)
+                ArtworkView(artwork: .appleMusic(artwork), width: CoverFlowMetrics.coverSize, height: CoverFlowMetrics.coverSize)
             } else {
                 Image(ImageNames.Custom.coverPlaceholder)
                     .resizable()

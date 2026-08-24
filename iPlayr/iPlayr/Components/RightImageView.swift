@@ -1,5 +1,4 @@
 import SwiftUI
-import MusicKit
 import Combine
 
 struct RightImageView: View {
@@ -22,7 +21,7 @@ struct RightImageView: View {
 
                 if !authManager.isAuthorized {
                     unauthorizedView
-                } else if let images = libraryStore.albums?.compactMap({ $0.artwork }),
+                } else if let images = libraryStore.albums?.compactMap({ $0.artwork.map(ArtworkRef.appleMusic) }),
                           !images.isEmpty {
                     artworkSlideshow(images, size: proxy.size)
                 } else {
@@ -69,11 +68,11 @@ struct RightImageView: View {
         }
     }
 
-    private func artworkSlideshow(_ images: [Artwork], size: CGSize) -> some View {
+    private func artworkSlideshow(_ images: [ArtworkRef], size: CGSize) -> some View {
         let dimension = (max(size.width, size.height) * overscan).rounded()
         return ZStack {
             if currentImageIndex >= 0 && currentImageIndex < images.count {
-                ArtworkImage(images[currentImageIndex], width: dimension, height: dimension)
+                ArtworkView(artwork: images[currentImageIndex], width: dimension, height: dimension)
                     .scaledToFill()
                     .frame(width: size.width, height: size.height)
                     .scaleEffect(overscan)
