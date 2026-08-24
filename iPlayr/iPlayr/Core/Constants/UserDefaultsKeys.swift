@@ -4,4 +4,5 @@ public enum UserDefaultsKeys: String {
     case soundsEnabled = "soundsEnabled"
     case musicMenuItems = "musicMenuItems"
     case mainMenuShortcuts = "mainMenuShortcuts"
+    case activeMusicProvider = "activeMusicProvider"
 }

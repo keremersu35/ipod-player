@@ -3,7 +3,7 @@ import Combine
 
 struct RightImageView: View {
     var isActive: Bool = true
-    @Environment(MusicAuthorizationManager.self) private var authManager
+    @Environment(MusicAccountManager.self) private var authManager
     @Environment(MusicLibraryStore.self) private var libraryStore
     @State private var currentImageIndex = 0
     @State private var timerCancellable: AnyCancellable?
@@ -58,10 +58,11 @@ struct RightImageView: View {
 
     private var unauthorizedView: some View {
         VStack {
-            Image(systemName: "applelogo")
+            Image(systemName: authManager.activeProviderID == .appleMusic ? "applelogo" : ImageNames.System.musicNote)
                 .font(.system(size: 60))
+                .foregroundColor(.white)
             Spacer().frame(height: 16)
-            Text("Please sign in to Apple Music")
+            Text("Please sign in to \(authManager.activeProviderID.title)")
                 .foregroundColor(.white)
                 .font(.system(size: 16, weight: .semibold))
                 .multilineTextAlignment(.center)

@@ -1,27 +1,25 @@
 import SwiftUI
-import MusicKit
 
 struct SignInView: View {
     @Environment(iPlayrButtonController.self) private var iPlayrController
-    @Environment(MusicAuthorizationManager.self) private var authManager
+    @Environment(MusicAccountManager.self) private var authManager
     @Environment(\.navigate) private var navigate
     @State private var scope = FocusScope(id: "login")
     @State private var isShowingModal = false
-    @State private var menus: [Menu] = [
-        Menu(id: 1, name: String(localized: "Apple Music"), next: true),
-    ]
+
+    private var providers: [MusicProviderID] { authManager.availableProviders }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             StatusBar(title: String(localized: "Sign In"))
-            ForEach(menus.indices, id: \.self) { index in
-                MenuItemView(menu: menus[index], isSelected: scope.selection == index)
+            ForEach(providers.indices, id: \.self) { index in
+                MenuItemView(menu: menu(at: index), isSelected: scope.selection == index)
             }
             Spacer()
         }
         .shadowedBackground()
         .onAppear(perform: setup)
-        .alert("Permission Required", isPresented: $isShowingModal) {
+        .alert(String(localized: "Permission Required"), isPresented: $isShowingModal) {
             Button("Go to Settings") {
                 openAppSettings()
             }
@@ -31,14 +29,20 @@ struct SignInView: View {
         }
     }
 
+    private func menu(at index: Int) -> Menu {
+        let provider = providers[index]
+        let isSignedIn = authManager.status(of: provider).isAuthorized
+        return Menu(name: provider.title, next: !isSignedIn, value: isSignedIn ? "\u{2713}" : nil)
+    }
+
     private func setup() {
-        scope.configure(itemCount: menus.count)
+        scope.configure(itemCount: providers.count)
         scope.onAction = { action in
             switch action {
             case .menu:
                 navigate(.pop)
             case .select:
-                Task { await handleAppleMusicSignIn() }
+                Task { await handleSignIn() }
             default:
                 break
             }
@@ -46,16 +50,16 @@ struct SignInView: View {
         iPlayrController.activate(scope)
     }
 
-    private func handleAppleMusicSignIn() async {
-        let status = authManager.authorizationStatus
+    private func handleSignIn() async {
+        guard providers.indices.contains(scope.selection) else { return }
+        let provider = providers[scope.selection]
 
-        if status == .denied {
+        if authManager.status(of: provider) == .denied {
             isShowingModal = true
             return
         }
 
-        let granted = await authManager.requestAuthorization()
-        if granted {
+        if await authManager.signIn(provider) {
             navigate(.pop)
         }
     }

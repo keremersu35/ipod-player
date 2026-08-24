@@ -2,7 +2,7 @@ import SwiftUI
 
 struct HomeListView: View {
     @Environment(iPlayrButtonController.self) private var iPlayrController
-    @Environment(MusicAuthorizationManager.self) private var authManager
+    @Environment(MusicAccountManager.self) private var authManager
     @Environment(PlaybackController.self) private var playerManager
     @Environment(MenuPreferences.self) private var menuPreferences
     @Environment(\.navigate) private var navigate

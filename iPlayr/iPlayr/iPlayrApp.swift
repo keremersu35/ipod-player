@@ -5,7 +5,7 @@ import UIKit
 struct iPlayrApp: App {
     @State var theme: ThemeManager = .init()
     @State private var playerManager: PlaybackController
-    @State private var authManager = MusicAuthorizationManager()
+    @State private var authManager: MusicAccountManager
     @State private var libraryStore: MusicLibraryStore
     @State private var menuPreferences = MenuPreferences()
 
@@ -14,6 +14,7 @@ struct iPlayrApp: App {
         let library = AppleMusicLibraryProvider()
         _libraryStore = State(initialValue: MusicLibraryStore(provider: library))
         _playerManager = State(initialValue: PlaybackController(provider: AppleMusicPlaybackProvider(library: library)))
+        _authManager = State(initialValue: MusicAccountManager(providers: [.appleMusic: AppleMusicAccountProvider()]))
     }
 
     var body: some Scene {
