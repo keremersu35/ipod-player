@@ -1,23 +1,17 @@
 import SwiftUI
 
-struct CollectionMenuModel: Equatable {
-    let artwork: ArtworkRef?
-    let name: String
-    let description: String
-}
-
 struct CollectionMenuItem: View {
-    var model: CollectionMenuModel
+    var item: LibraryItem
     var isSelected: Bool
 
     var body: some View {
         HStack {
             artworkView
             VStack(alignment: .leading) {
-                Text(model.name)
+                Text(item.title)
                     .font(.system(size: 16))
                     .fontWeight(.bold)
-                Text(model.description)
+                Text(item.subtitle)
                     .font(.system(size: 14))
                     .fontWeight(.regular)
             }
@@ -43,6 +37,6 @@ struct CollectionMenuItem: View {
     }
 
     private var artworkView: some View {
-        ArtworkView(artwork: model.artwork, width: 50, height: 50)
+        ArtworkView(artwork: item.artwork, width: 50, height: 50)
     }
 }

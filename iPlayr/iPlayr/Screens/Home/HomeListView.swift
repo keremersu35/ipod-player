@@ -1,10 +1,9 @@
 import SwiftUI
-import MusicKit
 
 struct HomeListView: View {
     @Environment(iPlayrButtonController.self) private var iPlayrController
     @Environment(MusicAuthorizationManager.self) private var authManager
-    @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(PlaybackController.self) private var playerManager
     @Environment(MenuPreferences.self) private var menuPreferences
     @Environment(\.navigate) private var navigate
     @State private var scope = FocusScope(id: "home")

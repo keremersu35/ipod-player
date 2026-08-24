@@ -1,9 +1,8 @@
 import SwiftUI
-import MusicKit
 
 struct SettingsView: View {
     @Environment(iPlayrButtonController.self) private var iPlayrController
-    @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(PlaybackController.self) private var playerManager
     @Environment(\.navigate) private var navigate
     @AppStorage(UserDefaultsKeys.hapticsEnabled.rawValue) private var hapticsEnabled: Bool = true
     @AppStorage(UserDefaultsKeys.soundsEnabled.rawValue) private var soundsEnabled: Bool = true
@@ -44,7 +43,7 @@ struct SettingsView: View {
         switch playerManager.repeatMode {
         case .one: return String(localized: "One")
         case .all: return String(localized: "All")
-        default: return String(localized: "Off")
+        case .off: return String(localized: "Off")
         }
     }
 
@@ -115,11 +114,11 @@ struct SettingsView: View {
         }
     }
 
-    private var nextRepeatMode: MusicPlayer.RepeatMode {
+    private var nextRepeatMode: RepeatMode {
         switch playerManager.repeatMode {
-        case .none: return .all
+        case .off: return .all
         case .all: return .one
-        default: return MusicPlayer.RepeatMode.none
+        case .one: return .off
         }
     }
 }

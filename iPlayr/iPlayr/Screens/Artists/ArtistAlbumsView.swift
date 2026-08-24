@@ -13,10 +13,10 @@ struct ArtistAlbumsView: View {
             cached: { libraryStore.cachedArtistAlbums(id: artist.id) },
             load: { await libraryStore.artistAlbums(id: artist.id) },
             onSelect: { album, _ in
-                navigate(.push(.albumTracks(album: CollectionInfoModel(id: album.id.rawValue, title: album.title))))
+                navigate(.push(.albumTracks(album: CollectionInfoModel(id: album.id, title: album.title))))
             }
         ) { album, isSelected in
-            CollectionMenuItem(model: album.toCollectionMenuModel(), isSelected: isSelected)
+            CollectionMenuItem(item: album, isSelected: isSelected)
         }
     }
 }

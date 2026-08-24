@@ -15,10 +15,10 @@ struct ComposersView: View {
                 return libraryStore.composers
             },
             onSelect: { composer, _ in
-                navigate(.push(.composerSongs(composer: composer)))
+                navigate(.push(.composerSongs(composer: composer.id)))
             }
         ) { composer, isSelected in
-            MenuItemView(menu: Menu(name: composer, next: isSelected), isSelected: isSelected)
+            MenuItemView(menu: Menu(name: composer.title, next: isSelected), isSelected: isSelected)
         }
     }
 }

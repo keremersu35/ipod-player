@@ -18,7 +18,7 @@ struct SongsView: View {
                 navigate(.push(.player(source: .allSongs, trackIndex: index)))
             }
         ) { song, isSelected in
-            CollectionMenuItem(model: song.toCollectionMenuModel(), isSelected: isSelected)
+            CollectionMenuItem(item: song, isSelected: isSelected)
         }
     }
 }

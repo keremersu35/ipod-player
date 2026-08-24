@@ -15,10 +15,10 @@ struct GenresView: View {
                 return libraryStore.genres
             },
             onSelect: { genre, _ in
-                navigate(.push(.artists(genre: CollectionInfoModel(id: genre.id.rawValue, title: genre.name))))
+                navigate(.push(.artists(genre: CollectionInfoModel(id: genre.id, title: genre.title))))
             }
         ) { genre, isSelected in
-            MenuItemView(menu: Menu(name: genre.name, next: isSelected), isSelected: isSelected)
+            MenuItemView(menu: Menu(name: genre.title, next: isSelected), isSelected: isSelected)
         }
     }
 }

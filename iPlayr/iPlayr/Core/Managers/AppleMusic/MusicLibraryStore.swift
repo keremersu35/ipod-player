@@ -1,100 +1,133 @@
-import MusicKit
+import Foundation
 import Observation
 
 @MainActor
 @Observable
 final class MusicLibraryStore {
-    private(set) var albums: [Album]?
-    private(set) var playlists: [Playlist]?
-    private(set) var artists: [Artist]?
-    private(set) var genres: [Genre]?
-    private(set) var songs: [Song]?
-    private(set) var composers: [String]?
+    private(set) var albums: [LibraryItem]?
+    private(set) var playlists: [LibraryItem]?
+    private(set) var artists: [LibraryItem]?
+    private(set) var genres: [LibraryItem]?
+    private(set) var songs: [LibraryItem]?
+    private(set) var composers: [LibraryItem]?
     var errorMessage: String?
 
-    @ObservationIgnored private let service = MusicLibraryService()
-    @ObservationIgnored private var albumTracksCache: [String: [Track]] = [:]
-    @ObservationIgnored private var playlistTracksCache: [String: [Track]] = [:]
-    @ObservationIgnored private var artistAlbumsCache: [String: [Album]] = [:]
-    @ObservationIgnored private var genreArtistsCache: [String: [Artist]] = [:]
+    @ObservationIgnored private var provider: any LibraryProvider
+    @ObservationIgnored private var albumTracksCache: [String: [LibraryItem]] = [:]
+    @ObservationIgnored private var playlistTracksCache: [String: [LibraryItem]] = [:]
+    @ObservationIgnored private var artistAlbumsCache: [String: [LibraryItem]] = [:]
+    @ObservationIgnored private var genreArtistsCache: [String: [LibraryItem]] = [:]
+    @ObservationIgnored private var composerSongsCache: [String: [LibraryItem]] = [:]
+
+    init(provider: any LibraryProvider) {
+        self.provider = provider
+    }
+
+    func use(_ provider: any LibraryProvider) {
+        self.provider = provider
+        albums = nil
+        playlists = nil
+        artists = nil
+        genres = nil
+        songs = nil
+        composers = nil
+        errorMessage = nil
+        albumTracksCache = [:]
+        playlistTracksCache = [:]
+        artistAlbumsCache = [:]
+        genreArtistsCache = [:]
+        composerSongsCache = [:]
+    }
 
     func loadAlbumsIfNeeded() async {
         guard albums == nil else { return }
-        albums = await fetch { try await service.fetchAlbums() }
+        albums = await fetch { try await provider.albums() }
     }
 
     func loadPlaylistsIfNeeded() async {
         guard playlists == nil else { return }
-        playlists = await fetch { try await service.fetchPlaylists() }
+        playlists = await fetch { try await provider.playlists() }
     }
 
     func loadArtistsIfNeeded() async {
         guard artists == nil else { return }
-        artists = await fetch { try await service.fetchArtists() }
+        artists = await fetch { try await provider.artists() }
     }
 
     func loadGenresIfNeeded() async {
         guard genres == nil else { return }
-        genres = await fetch { try await service.fetchGenres() }
+        genres = await fetch { try await provider.genres() }
     }
 
     func loadSongsIfNeeded() async {
         guard songs == nil else { return }
-        songs = await fetch { try await service.fetchSongs() }
+        songs = await fetch { try await provider.songs() }
     }
 
     func loadComposersIfNeeded() async {
         guard composers == nil else { return }
-        await loadSongsIfNeeded()
-        guard let songs else { return }
-        let names = songs.compactMap { $0.composerName?.trimmingCharacters(in: .whitespacesAndNewlines) }
-        composers = Set(names.filter { !$0.isEmpty })
-            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        composers = await fetch { try await provider.composers() }
     }
 
-    func composerSongs(name: String) -> [Song] {
-        songs?.filter { $0.composerName?.trimmingCharacters(in: .whitespacesAndNewlines) == name } ?? []
+    func cachedAlbumTracks(id: String) -> [LibraryItem]? { albumTracksCache[id] }
+    func cachedPlaylistTracks(id: String) -> [LibraryItem]? { playlistTracksCache[id] }
+    func cachedArtistAlbums(id: String) -> [LibraryItem]? { artistAlbumsCache[id] }
+    func cachedGenreArtists(id: String) -> [LibraryItem]? { genreArtistsCache[id] }
+    func cachedComposerSongs(name: String) -> [LibraryItem]? { composerSongsCache[name] }
+
+    func albumTracks(id: String) async -> [LibraryItem]? {
+        await cached(id, in: \.albumTracksCache) { try await provider.albumTracks(id: id) }
     }
 
-    func cachedAlbumTracks(id: String) -> [Track]? { albumTracksCache[id] }
-    func cachedPlaylistTracks(id: String) -> [Track]? { playlistTracksCache[id] }
-    func cachedArtistAlbums(id: String) -> [Album]? { artistAlbumsCache[id] }
-    func cachedGenreArtists(id: String) -> [Artist]? { genreArtistsCache[id] }
-
-    func albumTracks(id: String) async -> [Track]? {
-        if let cached = albumTracksCache[id] { return cached }
-        guard let tracks = await fetch({ try await service.fetchAlbumTracks(id: id) }) else { return nil }
-        albumTracksCache[id] = tracks
-        return tracks
+    func playlistTracks(id: String) async -> [LibraryItem]? {
+        await cached(id, in: \.playlistTracksCache) { try await provider.playlistTracks(id: id) }
     }
 
-    func playlistTracks(id: String) async -> [Track]? {
-        if let cached = playlistTracksCache[id] { return cached }
-        guard let tracks = await fetch({ try await service.fetchPlaylistTracks(id: id) }) else { return nil }
-        playlistTracksCache[id] = tracks
-        return tracks
+    func artistAlbums(id: String) async -> [LibraryItem]? {
+        await cached(id, in: \.artistAlbumsCache) { try await provider.artistAlbums(id: id) }
     }
 
-    func artistAlbums(id: String) async -> [Album]? {
-        if let cached = artistAlbumsCache[id] { return cached }
-        guard let albums = await fetch({ try await service.fetchArtistAlbums(id: id) }) else { return nil }
-        artistAlbumsCache[id] = albums
-        return albums
+    func genreArtists(id: String) async -> [LibraryItem]? {
+        await cached(id, in: \.genreArtistsCache) { try await provider.genreArtists(id: id) }
     }
 
-    func genreArtists(id: String) async -> [Artist]? {
-        if let cached = genreArtistsCache[id] { return cached }
-        guard let artists = await fetch({ try await service.fetchGenreArtists(id: id) }) else { return nil }
-        genreArtistsCache[id] = artists
-        return artists
+    func composerSongs(name: String) async -> [LibraryItem]? {
+        await cached(name, in: \.composerSongsCache) { try await provider.composerSongs(name: name) }
     }
 
-    private func fetch<T>(_ operation: () async throws -> [T]) async -> [T]? {
+    private func cached(
+        _ key: String,
+        in cache: ReferenceWritableKeyPath<MusicLibraryStore, [String: [LibraryItem]]>,
+        fetching operation: () async throws -> [LibraryItem]
+    ) async -> [LibraryItem]? {
+        if let hit = self[keyPath: cache][key] { return hit }
+        guard let items = await fetch(operation) else { return nil }
+        self[keyPath: cache][key] = items
+        return items
+    }
+
+    private func fetch(_ operation: () async throws -> [LibraryItem]) async -> [LibraryItem]? {
         do {
             return try await operation()
         } catch {
             errorMessage = String(localized: "Request failed with error: \(error.localizedDescription)")
             return nil
+        }
+    }
+}
+
+enum MusicLibraryError: LocalizedError, Sendable {
+    case albumNotFound
+    case playlistNotFound
+    case artistNotFound
+    case genreNotFound
+
+    var errorDescription: String? {
+        switch self {
+        case .albumNotFound: return "The specified album could not be found."
+        case .playlistNotFound: return "The specified playlist could not be found."
+        case .artistNotFound: return "The specified artist could not be found."
+        case .genreNotFound: return "The specified genre could not be found."
         }
     }
 }

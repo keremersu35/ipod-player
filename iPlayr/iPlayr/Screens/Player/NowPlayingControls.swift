@@ -114,7 +114,7 @@ struct NowPlayingBar<Leading: View, Trailing: View>: View {
 }
 
 struct ScrubberView: View {
-    @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(PlaybackController.self) private var playerManager
 
     private var duration: TimeInterval { playerManager.currentTrack?.duration ?? 0 }
 

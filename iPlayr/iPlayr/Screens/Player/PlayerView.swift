@@ -1,5 +1,4 @@
 import SwiftUI
-import MusicKit
 
 struct PlayerView: View {
     let source: PlaybackSource?
@@ -10,7 +9,7 @@ struct PlayerView: View {
     @State private var activeArtwork: ArtworkRef?
     @Environment(\.navigate) private var navigate
     @Environment(iPlayrButtonController.self) private var iPlayrController
-    @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(PlaybackController.self) private var playerManager
     @Environment(MusicLibraryStore.self) private var libraryStore
     @State private var scope = FocusScope(id: "player", handledTransportActions: [.playPause, .forwardEndAlt, .backwardEndAlt])
     @State private var currentDegree: Double = 80
@@ -46,7 +45,7 @@ struct PlayerView: View {
             if let artwork = initialArtwork {
                 activeArtwork = artwork
             } else {
-                activeArtwork = playerManager.currentTrack?.artwork.map(ArtworkRef.appleMusic)
+                activeArtwork = playerManager.currentTrack?.artwork
             }
             if !isFromCoverFlow {
                 currentDegree = finalRotation
@@ -70,22 +69,29 @@ struct PlayerView: View {
     private func startPlayback() async {
         guard let source else { return }
         do {
-            switch source {
-            case .album(let id):
-                try await playerManager.playAlbum(id: id, fromIndex: trackIndex)
-            case .playlist(let id):
-                try await playerManager.playPlaylist(id: id, fromIndex: trackIndex)
-            case .composer(let name):
-                try await playerManager.playSongs(libraryStore.composerSongs(name: name), fromIndex: trackIndex)
-            case .allSongs:
-                try await playerManager.playSongs(libraryStore.songs ?? [], fromIndex: trackIndex)
-            case .shuffleAll:
-                await libraryStore.loadSongsIfNeeded()
-                try await playerManager.playSongs(libraryStore.songs?.shuffled() ?? [])
-            }
+            try await playerManager.play(source: source, items: await items(for: source), fromIndex: startIndex(for: source))
         } catch {
             playbackErrorMessage = error.localizedDescription
         }
+    }
+
+    private func items(for source: PlaybackSource) async -> [LibraryItem] {
+        switch source {
+        case .album, .playlist:
+            return []
+        case .composer(let name):
+            return await libraryStore.composerSongs(name: name) ?? []
+        case .allSongs:
+            await libraryStore.loadSongsIfNeeded()
+            return libraryStore.songs ?? []
+        case .shuffleAll:
+            await libraryStore.loadSongsIfNeeded()
+            return libraryStore.songs?.shuffled() ?? []
+        }
+    }
+
+    private func startIndex(for source: PlaybackSource) -> Int {
+        source == .shuffleAll ? 0 : trackIndex
     }
 
     private func errorOverlay(_ message: String) -> some View {
@@ -142,7 +148,7 @@ struct PlayerView: View {
                     .frame(width: Self.artworkSize, height: Self.artworkSize)
                     .onChange(of: playerManager.currentTrack) { _, newValue in
                         if let newArtwork = newValue?.artwork {
-                            activeArtwork = .appleMusic(newArtwork)
+                            activeArtwork = newArtwork
                         }
                     }
 
@@ -333,7 +339,7 @@ struct PlayerView: View {
 
 
 struct SongProgressView: View {
-    @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(PlaybackController.self) private var playerManager
 
     private var duration: TimeInterval { playerManager.currentTrack?.duration ?? 0 }
 

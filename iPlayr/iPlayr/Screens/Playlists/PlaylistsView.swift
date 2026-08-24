@@ -15,10 +15,10 @@ struct PlaylistsView: View {
                 return libraryStore.playlists
             },
             onSelect: { playlist, _ in
-                navigate(.push(.playlistTracks(playlist: CollectionInfoModel(id: playlist.id.rawValue, title: playlist.name))))
+                navigate(.push(.playlistTracks(playlist: CollectionInfoModel(id: playlist.id, title: playlist.title))))
             }
         ) { playlist, isSelected in
-            CollectionMenuItem(model: playlist.toCollectionMenuModel(), isSelected: isSelected)
+            CollectionMenuItem(item: playlist, isSelected: isSelected)
         }
     }
 }

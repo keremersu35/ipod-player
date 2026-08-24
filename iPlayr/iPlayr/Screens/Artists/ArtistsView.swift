@@ -1,5 +1,4 @@
 import SwiftUI
-import MusicKit
 
 /// The whole artist list, or just the artists inside one genre when reached
 /// through the Genres menu.
@@ -16,19 +15,19 @@ struct ArtistsView: View {
             cached: cachedArtists,
             load: loadArtists,
             onSelect: { artist, _ in
-                navigate(.push(.artistAlbums(artist: CollectionInfoModel(id: artist.id.rawValue, title: artist.name))))
+                navigate(.push(.artistAlbums(artist: CollectionInfoModel(id: artist.id, title: artist.title))))
             }
         ) { artist, isSelected in
-            MenuItemView(menu: Menu(name: artist.name, next: isSelected), isSelected: isSelected)
+            MenuItemView(menu: Menu(name: artist.title, next: isSelected), isSelected: isSelected)
         }
     }
 
-    private func cachedArtists() -> [Artist]? {
+    private func cachedArtists() -> [LibraryItem]? {
         guard let genre else { return libraryStore.artists }
         return libraryStore.cachedGenreArtists(id: genre.id)
     }
 
-    private func loadArtists() async -> [Artist]? {
+    private func loadArtists() async -> [LibraryItem]? {
         guard let genre else {
             await libraryStore.loadArtistsIfNeeded()
             return libraryStore.artists

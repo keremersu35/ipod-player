@@ -1,5 +1,4 @@
 import SwiftUI
-import MusicKit
 
 struct CoverFlowView: View {
     @Environment(iPlayrButtonController.self) var iPlayrController
@@ -9,7 +8,7 @@ struct CoverFlowView: View {
     @State private var carouselScope = FocusScope(id: "coverFlow")
     @State private var songListScope = FocusScope(id: "coverFlowSongList")
 
-    private var albums: [Album] { libraryStore.albums ?? [] }
+    private var albums: [LibraryItem] { libraryStore.albums ?? [] }
     private var selectedIndex: Int { carouselScope.selection }
     @State private var selectedTrackIndex = 0
     @State private var viewState: ViewState = .loading
@@ -25,7 +24,7 @@ struct CoverFlowView: View {
 
     private var scrollOffset: CGFloat { scrollAnimator.scrollOffset }
 
-    private var visibleAlbums: [(index: Int, album: Album)] {
+    private var visibleAlbums: [(index: Int, album: LibraryItem)] {
         guard !albums.isEmpty else { return [] }
         let lower = max(0, selectedIndex - CoverFlowMetrics.windowRadius)
         let upper = min(albums.count - 1, selectedIndex + CoverFlowMetrics.windowRadius)
@@ -43,10 +42,10 @@ struct CoverFlowView: View {
 
                 if isPlayerView, albums.indices.contains(selectedIndex) {
                     PlayerView(
-                        source: .album(id: albums[selectedIndex].id.rawValue),
+                        source: .album(id: albums[selectedIndex].id),
                         trackIndex: selectedTrackIndex,
                         isFromCoverFlow: true,
-                        initialArtwork: albums[selectedIndex].artwork.map(ArtworkRef.appleMusic),
+                        initialArtwork: albums[selectedIndex].artwork,
                         onDismissFromCoverFlow: handleMenuAction
                     )
                     .id(playerViewId)
@@ -113,7 +112,7 @@ struct CoverFlowView: View {
                 .lineLimit(1)
                 .id("title-\(selectedIndex)")
                 .transition(.opacity)
-            Text(album?.artistName ?? "")
+            Text(album?.subtitle ?? "")
                 .font(.system(size: 16, weight: .bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.black)

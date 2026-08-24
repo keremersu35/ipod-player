@@ -3,7 +3,7 @@ import SwiftUI
 struct iPlayrView: View {
     @State private var iPlayrController: iPlayrButtonController = .init()
     @Environment(ThemeManager.self) private var theme
-    @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(PlaybackController.self) private var playerManager
 
     var body: some View {
         VStack() {

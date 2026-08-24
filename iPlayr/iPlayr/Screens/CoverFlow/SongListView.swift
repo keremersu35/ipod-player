@@ -1,14 +1,13 @@
 import SwiftUI
-import MusicKit
 
 struct SongListView: View {
-    let album: Album
+    let album: LibraryItem
     let isSelected: Bool
     @Binding var isSongList: Bool
     var scope: FocusScope
     @Environment(MusicLibraryStore.self) private var libraryStore
     @State private var isLoading = true
-    @State private var tracks: [Track] = []
+    @State private var tracks: [LibraryItem] = []
     private var shouldLoad: Bool { isSongList && isSelected }
 
     var body: some View {
@@ -48,7 +47,7 @@ struct SongListView: View {
     }
 
     private var artistName: some View {
-        Text(album.artistName)
+        Text(album.subtitle)
             .font(.system(size: 18, weight: .bold))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -84,7 +83,7 @@ struct SongListView: View {
 
     private func loadTracks() {
         Task {
-            tracks = await libraryStore.albumTracks(id: album.id.rawValue) ?? []
+            tracks = await libraryStore.albumTracks(id: album.id) ?? []
             scope.configure(itemCount: tracks.count)
             isLoading = false
         }

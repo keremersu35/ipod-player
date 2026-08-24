@@ -1,8 +1,7 @@
 import SwiftUI
-import MusicKit
 
 struct AlbumCover: View {
-    let album: Album
+    let album: LibraryItem
     let isSelected: Bool
     @Binding var isSongList: Bool
     var songListScope: FocusScope
@@ -32,7 +31,7 @@ struct AlbumCover: View {
     private var albumArtwork: some View {
         Group {
             if let artwork = album.artwork {
-                ArtworkView(artwork: .appleMusic(artwork), width: CoverFlowMetrics.coverSize, height: CoverFlowMetrics.coverSize)
+                ArtworkView(artwork: artwork, width: CoverFlowMetrics.coverSize, height: CoverFlowMetrics.coverSize)
             } else {
                 Image(ImageNames.Custom.coverPlaceholder)
                     .resizable()

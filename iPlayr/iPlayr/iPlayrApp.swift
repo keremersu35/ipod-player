@@ -1,15 +1,19 @@
 import SwiftUI
+import UIKit
 
 @main
 struct iPlayrApp: App {
     @State var theme: ThemeManager = .init()
-    @State private var playerManager = AppleMusicManager()
+    @State private var playerManager: PlaybackController
     @State private var authManager = MusicAuthorizationManager()
-    @State private var libraryStore = MusicLibraryStore()
+    @State private var libraryStore: MusicLibraryStore
     @State private var menuPreferences = MenuPreferences()
 
     init() {
         UIDevice.current.isBatteryMonitoringEnabled = true
+        let library = AppleMusicLibraryProvider()
+        _libraryStore = State(initialValue: MusicLibraryStore(provider: library))
+        _playerManager = State(initialValue: PlaybackController(provider: AppleMusicPlaybackProvider(library: library)))
     }
 
     var body: some Scene {

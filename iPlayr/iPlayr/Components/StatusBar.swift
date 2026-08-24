@@ -3,7 +3,7 @@ import SwiftUI
 struct StatusBar: View {
     static let height: CGFloat = 26
 
-    @Environment(AppleMusicManager.self) private var playerManager
+    @Environment(PlaybackController.self) private var playerManager
     var title: String
     @State private var batteryLevel = UIDevice.current.batteryLevel
 

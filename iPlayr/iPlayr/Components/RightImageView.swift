@@ -21,7 +21,7 @@ struct RightImageView: View {
 
                 if !authManager.isAuthorized {
                     unauthorizedView
-                } else if let images = libraryStore.albums?.compactMap({ $0.artwork.map(ArtworkRef.appleMusic) }),
+                } else if let images = libraryStore.albums?.compactMap({ $0.artwork }),
                           !images.isEmpty {
                     artworkSlideshow(images, size: proxy.size)
                 } else {
