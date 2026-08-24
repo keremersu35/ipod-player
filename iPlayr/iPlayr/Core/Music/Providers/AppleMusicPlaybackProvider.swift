@@ -54,9 +54,6 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
         try await startPlayback()
     }
 
-    /// ApplicationMusicPlayer times out when handed a few hundred entries at once,
-    /// so only a window around the chosen song is queued. The lead-in keeps some
-    /// history behind the selection so the previous-track button still works.
     private func queueSongs(_ items: [LibraryItem], fromIndex: Int) async throws {
         guard items.indices.contains(fromIndex) else {
             throw MusicPlayerError.invalidTrackIndex(index: fromIndex, totalTracks: items.count)

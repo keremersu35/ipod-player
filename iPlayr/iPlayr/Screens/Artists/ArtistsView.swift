@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// The whole artist list, or just the artists inside one genre when reached
-/// through the Genres menu.
 struct ArtistsView: View {
     let genre: CollectionInfoModel?
     @Environment(MusicLibraryStore.self) private var libraryStore
