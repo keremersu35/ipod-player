@@ -6,21 +6,26 @@ struct AlbumCover: View {
     @Binding var isSongList: Bool
     var songListScope: FocusScope
     @State private var isFaceUp = false
+    @State private var showsSongList = false
 
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 albumArtwork
-                songListOverlay
+                if showsSongList {
+                    songListOverlay
+                }
             }
             .frame(width: isFaceUp ? CoverFlowMetrics.expandedSize : CoverFlowMetrics.coverSize,
                    height: isFaceUp ? CoverFlowMetrics.expandedSize : CoverFlowMetrics.coverSize)
             .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
             .onChange(of: isSongList) { _, newValue in
-                if isSelected {
-                    withAnimation(.linear(duration: 0.3)) {
-                        isFaceUp = newValue
-                    }
+                guard isSelected else { return }
+                if newValue { showsSongList = true }
+                withAnimation(.linear(duration: 0.3)) {
+                    isFaceUp = newValue
+                } completion: {
+                    if !isFaceUp { showsSongList = false }
                 }
             }
         }

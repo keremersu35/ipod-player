@@ -9,6 +9,9 @@ private final class DisplayLinkProxy: NSObject {
 @Observable
 final class CoverFlowScrollAnimator {
     private(set) var scrollOffset: CGFloat = 0
+    var dragOffset: CGFloat = 0
+
+    var visualOffset: CGFloat { scrollOffset + dragOffset }
 
     private let stiffness: CGFloat = 400
     private let damping: CGFloat = 30
@@ -26,8 +29,14 @@ final class CoverFlowScrollAnimator {
     func jumpTo(_ offset: CGFloat) {
         stopLink()
         scrollOffset = offset
+        dragOffset = 0
         velocity = 0
         targetOffset = offset
+    }
+
+    func settle(at target: CGFloat) {
+        if dragOffset != 0 { jumpTo(visualOffset) }
+        animateTo(target)
     }
 
     private func startLink() {

@@ -22,9 +22,9 @@ struct SongListView: View {
                 LoadingView()
             }
         }
-        .onDisappear(perform: cleanup)
-        .onChange(of: shouldLoad, initial: false) { _, shouldLoad in
-            if shouldLoad { loadTracks() }
+        .task(id: shouldLoad) {
+            guard shouldLoad else { return }
+            await loadTracks()
         }
     }
 
@@ -81,16 +81,12 @@ struct SongListView: View {
         }
     }
 
-    private func loadTracks() {
-        Task {
-            tracks = await libraryStore.albumTracks(id: album.id) ?? []
-            scope.configure(itemCount: tracks.count)
-            isLoading = false
-        }
-    }
-
-    private func cleanup() {
-        isLoading = true
+    private func loadTracks() async {
+        let loaded = await libraryStore.albumTracks(id: album.id) ?? []
+        guard !Task.isCancelled else { return }
+        tracks = loaded
+        scope.configure(itemCount: loaded.count)
+        isLoading = false
     }
 }
 

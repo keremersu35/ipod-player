@@ -15,21 +15,8 @@ struct CoverFlowView: View {
     @State private var isPlayerView = false
     @State private var isSongList = false
     @State private var playerViewId = UUID()
-    @State private var dragOffset: CGFloat = 0
 
-    private let itemWidth = CoverFlowMetrics.coverSize
     private let itemStep = CoverFlowMetrics.itemStep
-    private let tilt = CoverFlowMetrics.tilt
-    private let cfSpacing = CoverFlowMetrics.spacing
-
-    private var scrollOffset: CGFloat { scrollAnimator.scrollOffset }
-
-    private var visibleAlbums: [(index: Int, album: LibraryItem)] {
-        guard !albums.isEmpty else { return [] }
-        let lower = max(0, selectedIndex - CoverFlowMetrics.windowRadius)
-        let upper = min(albums.count - 1, selectedIndex + CoverFlowMetrics.windowRadius)
-        return (lower...upper).map { (index: $0, album: albums[$0]) }
-    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -61,10 +48,12 @@ struct CoverFlowView: View {
         }
         .taskAfterNavigation { await loadAlbums() }
         .onAppear(perform: setup)
+        .onChange(of: albums.count) { _, count in
+            guard viewState == .content else { return }
+            carouselScope.itemCount = count
+        }
         .onChange(of: carouselScope.selection) { _, newIndex in
-            scrollAnimator.jumpTo(scrollOffset + dragOffset)
-            dragOffset = 0
-            scrollAnimator.animateTo(-CGFloat(newIndex) * itemStep)
+            scrollAnimator.settle(at: -CGFloat(newIndex) * itemStep)
         }
     }
 
@@ -73,23 +62,14 @@ struct CoverFlowView: View {
         if !isPlayerView {
             VStack(spacing: 0) {
                 Spacer().frame(height: 8)
-                GeometryReader { geometry in
-                    ZStack {
-                        ForEach(visibleAlbums, id: \.album.id) { item in
-                            let offset = relativeOffset(for: item.index)
-                            AlbumCover(album: item.album, isSelected: item.index == selectedIndex, isSongList: $isSongList, songListScope: songListScope)
-                                .frame(width: itemWidth, height: itemWidth)
-                                .rotation3DEffect(.degrees(rotation(offset)), axis: (x: 0, y: 1, z: 0), perspective: 0.3)
-                                .scaleEffect(scale(offset))
-                                .offset(x: xOffset(offset))
-                                .zIndex(isSongList && item.index == selectedIndex ? 1000 : zIndex(offset))
-                        }
-                    }
-                    .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
-                }
-                .frame(maxWidth: .infinity, maxHeight: 200)
-                .contentShape(Rectangle())
-                .simultaneousGesture(dragGesture)
+                CoverFlowCarousel(
+                    albums: albums,
+                    selectedIndex: selectedIndex,
+                    scrollAnimator: scrollAnimator,
+                    isSongList: $isSongList,
+                    songListScope: songListScope,
+                    onDragEnd: navigateTo
+                )
 
                 Spacer().frame(height: 35)
             }
@@ -124,42 +104,12 @@ struct CoverFlowView: View {
         .zIndex(1)
     }
 
-    private var dragGesture: some Gesture {
-        DragGesture()
-            .onChanged { dragOffset = $0.translation.width }
-            .onEnded { value in
-                let projected = scrollOffset + value.translation.width + value.predictedEndTranslation.width / 2
-                let index = Int(max(0, min(CGFloat(albums.count - 1), round(-projected / itemStep))))
-                navigateTo(index)
-            }
-    }
-
     private func navigateTo(_ index: Int) {
-        carouselScope.select(index)
-        scrollAnimator.jumpTo(scrollOffset + dragOffset)
-        dragOffset = 0
-        scrollAnimator.animateTo(-CGFloat(index) * itemStep)
-    }
-
-    private func relativeOffset(for index: Int) -> CGFloat {
-        (CGFloat(index) * itemStep + scrollOffset + dragOffset) / itemStep
-    }
-
-    private func rotation(_ offset: CGFloat) -> Double {
-        -Double(max(-1, min(1, offset))) * 90 * Double(tilt)
-    }
-
-    private func xOffset(_ offset: CGFloat) -> CGFloat {
-        let clamp = max(-1, min(1, offset))
-        return (clamp * 0.5 * tilt + offset * cfSpacing) * itemWidth
-    }
-
-    private func scale(_ offset: CGFloat) -> CGFloat {
-        max(1 - abs(max(-1, min(1, offset))) * 0.15, 0.85)
-    }
-
-    private func zIndex(_ offset: CGFloat) -> Double {
-        (2 - abs(Double(offset))) * 10
+        if carouselScope.selection == index {
+            scrollAnimator.settle(at: -CGFloat(index) * itemStep)
+        } else {
+            carouselScope.select(index)
+        }
     }
 
     private func loadAlbums() async {
@@ -226,5 +176,80 @@ struct CoverFlowView: View {
     private func configureController() {
         carouselScope.onAction = { handleButtonAction($0) }
         iPlayrController.activate(carouselScope)
+    }
+}
+
+private struct CoverFlowCarousel: View {
+    let albums: [LibraryItem]
+    let selectedIndex: Int
+    let scrollAnimator: CoverFlowScrollAnimator
+    @Binding var isSongList: Bool
+    let songListScope: FocusScope
+    let onDragEnd: (Int) -> Void
+
+    private let itemWidth = CoverFlowMetrics.coverSize
+    private let itemStep = CoverFlowMetrics.itemStep
+    private let tilt = CoverFlowMetrics.tilt
+    private let cfSpacing = CoverFlowMetrics.spacing
+
+    private var visibleIndices: ClosedRange<Int>? {
+        guard !albums.isEmpty else { return nil }
+        let lower = max(0, selectedIndex - CoverFlowMetrics.windowRadius)
+        let upper = min(albums.count - 1, selectedIndex + CoverFlowMetrics.windowRadius)
+        guard lower <= upper else { return nil }
+        return lower...upper
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                if let visibleIndices {
+                    ForEach(visibleIndices, id: \.self) { index in
+                        let offset = relativeOffset(for: index)
+                        AlbumCover(album: albums[index], isSelected: index == selectedIndex, isSongList: $isSongList, songListScope: songListScope)
+                            .frame(width: itemWidth, height: itemWidth)
+                            .rotation3DEffect(.degrees(rotation(offset)), axis: (x: 0, y: 1, z: 0), perspective: 0.3)
+                            .scaleEffect(scale(offset))
+                            .offset(x: xOffset(offset))
+                            .zIndex(isSongList && index == selectedIndex ? 1000 : zIndex(offset))
+                    }
+                }
+            }
+            .position(x: geometry.size.width / 2, y: geometry.size.height / 2)
+        }
+        .frame(maxWidth: .infinity, maxHeight: 200)
+        .contentShape(Rectangle())
+        .simultaneousGesture(dragGesture)
+    }
+
+    private var dragGesture: some Gesture {
+        DragGesture()
+            .onChanged { scrollAnimator.dragOffset = $0.translation.width }
+            .onEnded { value in
+                let projected = scrollAnimator.scrollOffset + value.translation.width + value.predictedEndTranslation.width / 2
+                let index = Int(max(0, min(CGFloat(albums.count - 1), round(-projected / itemStep))))
+                onDragEnd(index)
+            }
+    }
+
+    private func relativeOffset(for index: Int) -> CGFloat {
+        (CGFloat(index) * itemStep + scrollAnimator.visualOffset) / itemStep
+    }
+
+    private func rotation(_ offset: CGFloat) -> Double {
+        -Double(max(-1, min(1, offset))) * 90 * Double(tilt)
+    }
+
+    private func xOffset(_ offset: CGFloat) -> CGFloat {
+        let clamp = max(-1, min(1, offset))
+        return (clamp * 0.5 * tilt + offset * cfSpacing) * itemWidth
+    }
+
+    private func scale(_ offset: CGFloat) -> CGFloat {
+        max(1 - abs(max(-1, min(1, offset))) * 0.15, 0.85)
+    }
+
+    private func zIndex(_ offset: CGFloat) -> Double {
+        (2 - abs(Double(offset))) * 10
     }
 }
