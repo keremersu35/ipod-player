@@ -15,11 +15,7 @@ struct PlayerView: View {
     @State private var currentDegree: Double = 80
     @State private var currentOpacity: Double = 0
     @State private var isScaleAnimation: Bool = true
-    @State private var seekTimer: Timer?
-    @State private var isSeekingForward: Bool = false
-    @State private var isSeekingBackward: Bool = false
-    @State private var seekStartTime: Date?
-    @State private var currentSeekSpeed: Double = 1.0
+    @State private var seekTask: Task<Void, Never>?
     @State private var playbackErrorMessage: String?
     @State private var mode: NowPlayingMode = .progress
     @State private var volumeLevel: Float?
@@ -268,11 +264,11 @@ struct PlayerView: View {
                     try? await playerManager.togglePlayPause()
                 }
             case .forwardLongPress:
-                startSeekingForward()
+                startSeeking(forward: true)
             case .forwardLongPressEnd:
                 stopSeeking()
             case .backwardLongPress:
-                startSeekingBackward()
+                startSeeking(forward: false)
             case .backwardLongPressEnd:
                 stopSeeking()
             }
@@ -280,59 +276,35 @@ struct PlayerView: View {
         iPlayrController.activate(scope)
     }
 
-    private func startSeekingForward() {
-        guard !isSeekingForward && !isSeekingBackward else { return }
-        isSeekingForward = true
-        seekStartTime = Date()
-        currentSeekSpeed = 1.0
-
-        seekTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            Task {
-                await updateSeekSpeed()
-                await playerManager.seekForward(seconds: currentSeekSpeed)
-            }
-        }
-    }
-
-    private func startSeekingBackward() {
-        guard !isSeekingForward && !isSeekingBackward else { return }
-        isSeekingBackward = true
-        seekStartTime = Date()
-        currentSeekSpeed = 1.0
-
-        seekTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            Task {
-                await updateSeekSpeed()
-                await playerManager.seekBackward(seconds: currentSeekSpeed)
+    private func startSeeking(forward: Bool) {
+        guard seekTask == nil else { return }
+        seekTask = Task {
+            let start = ContinuousClock.now
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(100))
+                guard !Task.isCancelled else { return }
+                let speed = Self.seekSpeed(after: ContinuousClock.now - start)
+                if forward {
+                    playerManager.seekForward(seconds: speed)
+                } else {
+                    playerManager.seekBackward(seconds: speed)
+                }
             }
         }
     }
 
     private func stopSeeking() {
-        seekTimer?.invalidate()
-        seekTimer = nil
-        isSeekingForward = false
-        isSeekingBackward = false
-        seekStartTime = nil
-        currentSeekSpeed = 1.0
+        seekTask?.cancel()
+        seekTask = nil
     }
 
-    @MainActor
-    private func updateSeekSpeed() {
-        guard let startTime = seekStartTime else { return }
-
-        let elapsedTime = Date().timeIntervalSince(startTime)
-        switch elapsedTime {
-        case 0..<1:
-            currentSeekSpeed = 1.0
-        case 1..<3:
-            currentSeekSpeed = 2.0
-        case 3..<5:
-            currentSeekSpeed = 5.0
-        case 5..<10:
-            currentSeekSpeed = 10.0
-        default:
-            currentSeekSpeed = 20.0
+    private static func seekSpeed(after elapsed: Duration) -> Double {
+        switch elapsed {
+        case ..<Duration.seconds(1): return 1
+        case ..<Duration.seconds(3): return 2
+        case ..<Duration.seconds(5): return 5
+        case ..<Duration.seconds(10): return 10
+        default: return 20
         }
     }
 }

@@ -18,13 +18,19 @@ final class MusicAccountManager {
     @ObservationIgnored private var cancellables = Set<AnyCancellable>()
 
     private var activeProvider: any AccountProvider {
-        providers[activeProviderID] ?? providers.values.first!
+        providers[activeProviderID] ?? fallbackProvider
     }
+    @ObservationIgnored private let fallbackProvider: any AccountProvider
 
     init(providers: [MusicProviderID: any AccountProvider]) {
+        guard let fallback = providers[.appleMusic] ?? providers.values.first else {
+            preconditionFailure("MusicAccountManager requires at least one AccountProvider")
+        }
         self.providers = providers
+        self.fallbackProvider = fallback
         let stored = UserDefaults.standard.string(forKey: UserDefaultsKeys.activeMusicProvider.rawValue)
-        self.activeProviderID = stored.flatMap(MusicProviderID.init(rawValue:)) ?? .appleMusic
+            .flatMap(MusicProviderID.init(rawValue:))
+        self.activeProviderID = stored.flatMap { providers[$0] != nil ? $0 : nil } ?? fallback.id
         status = activeProvider.status
         observeAppLifecycle()
         Task { await refreshStatus() }
