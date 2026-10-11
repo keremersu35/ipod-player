@@ -6,6 +6,7 @@ struct RightImageView: View {
     @Environment(MusicAccountManager.self) private var authManager
     @Environment(MusicLibraryStore.self) private var libraryStore
     @State private var currentImageIndex = 0
+    @State private var images: [ArtworkRef] = []
     @State private var timerCancellable: AnyCancellable?
     @State private var panDirection: PanDirection = .right
 
@@ -21,8 +22,7 @@ struct RightImageView: View {
 
                 if !authManager.isAuthorized {
                     unauthorizedView
-                } else if let images = libraryStore.albums?.compactMap({ $0.artwork }),
-                          !images.isEmpty {
+                } else if !images.isEmpty {
                     artworkSlideshow(images, size: proxy.size)
                 } else {
                     noMusicView
@@ -37,8 +37,9 @@ struct RightImageView: View {
                 Task { await loadAlbumsIfAuthorized() }
             }
         }
-        .onChange(of: libraryStore.albums) { _, albums in
-            guard !(albums?.isEmpty ?? true) else { return }
+        .onChange(of: libraryStore.albums, initial: true) { _, albums in
+            images = albums?.compactMap(\.artwork) ?? []
+            if currentImageIndex >= images.count { currentImageIndex = 0 }
             startImageCycle()
         }
         .onChange(of: isActive) { _, isNowActive in
@@ -105,19 +106,18 @@ struct RightImageView: View {
 
     private func startImageCycle() {
         stopImageCycle()
-        guard isActive, !(libraryStore.albums?.isEmpty ?? true) else { return }
+        guard isActive, images.count > 1 else { return }
         timerCancellable = Timer.publish(every: imageDuration, on: .main, in: .common)
             .autoconnect()
             .sink { _ in transitionToNextImage() }
     }
 
     private func transitionToNextImage() {
-        guard let albumsCount = libraryStore.albums?.count,
-              albumsCount > 1 else { return }
+        guard images.count > 1 else { return }
 
         withAnimation(.easeInOut(duration: transitionDuration)) {
             panDirection = panDirection == .right ? .left : .right
-            currentImageIndex = (currentImageIndex + 1) % albumsCount
+            currentImageIndex = (currentImageIndex + 1) % images.count
         }
     }
 
