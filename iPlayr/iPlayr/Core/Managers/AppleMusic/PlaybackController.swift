@@ -7,8 +7,6 @@ final class PlaybackController {
     private(set) var currentTrack: NowPlayingTrack?
     private(set) var isPlaying = false
     private(set) var isPaused = false
-    private(set) var isFirst = false
-    private(set) var isLast = false
     private(set) var queuePosition: String?
     private(set) var shuffleMode: ShuffleMode = .off
     private(set) var repeatMode: RepeatMode = .off
@@ -40,8 +38,6 @@ final class PlaybackController {
         currentTrack = provider.currentTrack
         isPlaying = provider.isPlaying
         isPaused = provider.isPaused
-        isFirst = provider.isFirst
-        isLast = provider.isLast
         queuePosition = provider.queuePosition
         shuffleMode = provider.shuffleMode
         repeatMode = provider.repeatMode

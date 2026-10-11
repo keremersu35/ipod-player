@@ -11,8 +11,8 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
     private(set) var currentTrack: NowPlayingTrack?
     private(set) var isPlaying = false
     private(set) var isPaused = false
-    private(set) var isFirst = false
-    private(set) var isLast = false
+    private var isFirst = false
+    private var isLast = false
     private(set) var queuePosition: String?
     private(set) var shuffleMode: ShuffleMode = .off
     private(set) var repeatMode: RepeatMode = .off
@@ -22,7 +22,9 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
 
     private let library: AppleMusicLibraryProvider
     private nonisolated(unsafe) let musicPlayer = ApplicationMusicPlayer.shared
-    private var cancellables = Set<AnyCancellable>()
+    private var stateCancellable: AnyCancellable?
+    private var queueCancellable: AnyCancellable?
+    private var refreshTask: Task<Void, Never>?
     private var isSkipping = false
 
     init(library: AppleMusicLibraryProvider) {
@@ -50,6 +52,7 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
         case .allSongs, .composer, .shuffleAll:
             try await queueSongs(items, fromIndex: fromIndex)
         }
+        observeQueue()
         musicPlayer.state.shuffleMode = .off
         try await startPlayback()
     }
@@ -98,7 +101,7 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
         isSkipping = true
         defer { isSkipping = false }
         try await musicPlayer.skipToNextEntry()
-        await refresh()
+        refresh()
     }
 
     func skipToPrevious() async throws {
@@ -106,7 +109,7 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
         isSkipping = true
         defer { isSkipping = false }
         try await musicPlayer.skipToPreviousEntry()
-        await refresh()
+        refresh()
     }
 
     func stop() {
@@ -146,15 +149,30 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
     }
 
     private func observePlayer() {
-        Publishers.Merge(musicPlayer.state.objectWillChange, musicPlayer.queue.objectWillChange)
-            .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
+        stateCancellable = musicPlayer.state.objectWillChange
             .sink { [weak self] _ in
-                Task { @MainActor [weak self] in await self?.refresh() }
+                Task { @MainActor [weak self] in self?.scheduleRefresh() }
             }
-            .store(in: &cancellables)
+        observeQueue()
     }
 
-    private func refresh() async {
+    private func observeQueue() {
+        queueCancellable = musicPlayer.queue.objectWillChange
+            .sink { [weak self] _ in
+                Task { @MainActor [weak self] in self?.scheduleRefresh() }
+            }
+    }
+
+    private func scheduleRefresh() {
+        refreshTask?.cancel()
+        refreshTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(100))
+            guard !Task.isCancelled else { return }
+            self?.refresh()
+        }
+    }
+
+    private func refresh() {
         let entries = musicPlayer.queue.entries
         let currentID = musicPlayer.queue.currentEntry?.id
         isLast = entries.last?.id == currentID
@@ -197,9 +215,9 @@ enum MusicPlayerError: LocalizedError, Sendable {
     var errorDescription: String? {
         switch self {
         case .trackNotFound:
-            return "The specified track could not be found."
+            return String(localized: "The specified track could not be found.")
         case .invalidTrackIndex(let index, let totalTracks):
-            return "The track index \(index) is out of range. The item contains \(totalTracks) tracks."
+            return String(localized: "The track index \(index) is out of range. The item contains \(totalTracks) tracks.")
         }
     }
 }

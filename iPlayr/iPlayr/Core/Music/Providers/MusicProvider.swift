@@ -45,6 +45,8 @@ protocol LibraryProvider: Sendable {
     func artistAlbums(id: String) async throws -> [LibraryItem]
     func genreArtists(id: String) async throws -> [LibraryItem]
     func composerSongs(name: String) async throws -> [LibraryItem]
+
+    func invalidateCache() async
 }
 
 extension LibraryProvider {
@@ -52,6 +54,7 @@ extension LibraryProvider {
     func composers() async throws -> [LibraryItem] { [] }
     func genreArtists(id: String) async throws -> [LibraryItem] { [] }
     func composerSongs(name: String) async throws -> [LibraryItem] { [] }
+    func invalidateCache() async {}
 }
 
 @MainActor
@@ -59,8 +62,6 @@ protocol PlaybackProvider: AnyObject {
     var currentTrack: NowPlayingTrack? { get }
     var isPlaying: Bool { get }
     var isPaused: Bool { get }
-    var isFirst: Bool { get }
-    var isLast: Bool { get }
     var queuePosition: String? { get }
     var shuffleMode: ShuffleMode { get }
     var repeatMode: RepeatMode { get }

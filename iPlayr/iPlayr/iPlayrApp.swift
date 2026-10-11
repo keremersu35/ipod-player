@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import MediaPlayer
 
 @main
 struct iPlayrApp: App {
@@ -11,6 +12,7 @@ struct iPlayrApp: App {
 
     init() {
         UIDevice.current.isBatteryMonitoringEnabled = true
+        MPMediaLibrary.default().beginGeneratingLibraryChangeNotifications()
         let library = AppleMusicLibraryProvider()
         _libraryStore = State(initialValue: MusicLibraryStore(provider: library))
         _playerManager = State(initialValue: PlaybackController(provider: AppleMusicPlaybackProvider(library: library)))
@@ -25,6 +27,9 @@ struct iPlayrApp: App {
                 .environment(authManager)
                 .environment(libraryStore)
                 .environment(menuPreferences)
+                .onReceive(NotificationCenter.default.publisher(for: .MPMediaLibraryDidChange)) { _ in
+                    Task { await libraryStore.invalidate() }
+                }
         }
     }
 }

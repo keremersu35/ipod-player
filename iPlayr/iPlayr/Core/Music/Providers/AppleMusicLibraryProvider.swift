@@ -2,27 +2,30 @@ import Foundation
 import MusicKit
 
 actor AppleMusicLibraryProvider: LibraryProvider {
+    private var songCache: [Song]?
+    private var songTask: Task<[Song], Error>?
+
     func albums() async throws -> [LibraryItem] {
         var request = MusicLibraryRequest<Album>()
         request.sort(by: \.title, ascending: true)
-        return try await drain(request.response().items).map(Self.item)
+        return try await Self.drain(request.response().items).map(Self.item)
     }
 
     func playlists() async throws -> [LibraryItem] {
         let request = MusicLibraryRequest<Playlist>()
-        return try await drain(request.response().items).map(Self.item)
+        return try await Self.drain(request.response().items).map(Self.item)
     }
 
     func artists() async throws -> [LibraryItem] {
         var request = MusicLibraryRequest<Artist>()
         request.sort(by: \.name, ascending: true)
-        return try await drain(request.response().items).map(Self.item)
+        return try await Self.drain(request.response().items).map(Self.item)
     }
 
     func genres() async throws -> [LibraryItem] {
         var request = MusicLibraryRequest<Genre>()
         request.sort(by: \.name, ascending: true)
-        return try await drain(request.response().items).map(Self.item)
+        return try await Self.drain(request.response().items).map(Self.item)
     }
 
     func songs() async throws -> [LibraryItem] {
@@ -62,13 +65,13 @@ actor AppleMusicLibraryProvider: LibraryProvider {
         var byRelationship = MusicLibraryRequest<Album>()
         byRelationship.filter(matching: \.artists, contains: artist)
         byRelationship.sort(by: \.title, ascending: true)
-        let albums = try await drain(byRelationship.response().items)
+        let albums = try await Self.drain(byRelationship.response().items)
         guard albums.isEmpty else { return albums.map(Self.item) }
 
         var byName = MusicLibraryRequest<Album>()
         byName.filter(matching: \.artistName, equalTo: artist.name)
         byName.sort(by: \.title, ascending: true)
-        return try await drain(byName.response().items).map(Self.item)
+        return try await Self.drain(byName.response().items).map(Self.item)
     }
 
     func genreArtists(id: String) async throws -> [LibraryItem] {
@@ -80,7 +83,7 @@ actor AppleMusicLibraryProvider: LibraryProvider {
         var artists = MusicLibraryRequest<Artist>()
         artists.filter(matching: \.genres, contains: genre)
         artists.sort(by: \.name, ascending: true)
-        return try await drain(artists.response().items).map(Self.item)
+        return try await Self.drain(artists.response().items).map(Self.item)
     }
 
     func composerSongs(name: String) async throws -> [LibraryItem] {
@@ -111,25 +114,35 @@ actor AppleMusicLibraryProvider: LibraryProvider {
         guard !ids.isEmpty else { return [] }
         var request = MusicLibraryRequest<Song>()
         request.filter(matching: \.id, memberOf: ids.map { MusicItemID($0) })
-        let found = try await drain(request.response().items)
+        let found = try await Self.drain(request.response().items)
         let byID = Dictionary(found.map { ($0.id.rawValue, $0) }, uniquingKeysWith: { first, _ in first })
         return ids.compactMap { byID[$0] }
     }
 
-    private func librarySongs() async throws -> [Song] {
-        var request = MusicLibraryRequest<Song>()
-        request.sort(by: \.title, ascending: true)
-        return try await drain(request.response().items)
+    func invalidateCache() {
+        songCache = nil
+        songTask = nil
     }
 
-    private func drain<T: MusicItem>(_ firstBatch: MusicItemCollection<T>) async throws -> [T] {
-        var batch = firstBatch
-        var items = Array(batch)
-        while batch.hasNextBatch, let next = try await batch.nextBatch() {
-            items.append(contentsOf: next)
-            batch = next
+    private func librarySongs() async throws -> [Song] {
+        if let songCache { return songCache }
+        if let songTask { return try await songTask.value }
+        let task = Task {
+            var request = MusicLibraryRequest<Song>()
+            request.sort(by: \.title, ascending: true)
+            return try await Self.drain(request.response().items)
         }
-        return items
+        songTask = task
+        defer { if songTask == task { songTask = nil } }
+        let songs = try await task.value
+        if songTask == task { songCache = songs }
+        return songs
+    }
+
+    private static func drain<T: MusicItem>(_ firstBatch: MusicItemCollection<T>) async throws -> [T] {
+        try await drainPages(first: firstBatch, elements: { Array($0) }) { batch in
+            batch.hasNextBatch ? try await batch.nextBatch() : nil
+        }
     }
 
     private static func item(_ album: Album) -> LibraryItem {
