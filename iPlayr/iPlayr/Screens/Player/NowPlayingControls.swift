@@ -141,10 +141,12 @@ struct VolumeBarView: View {
 
     var body: some View {
         NowPlayingBar(progress: Double(level)) {
-            iPodBitmap.volumeLow
+            Image(systemName: ImageNames.System.speakerLow)
+                .font(.system(size: 12))
                 .foregroundColor(.black)
         } trailing: {
-            iPodBitmap.volumeHigh
+            Image(systemName: ImageNames.System.speakerHigh)
+                .font(.system(size: 12))
                 .foregroundColor(.black)
         }
     }

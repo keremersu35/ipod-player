@@ -141,8 +141,8 @@ struct DeviceStorage {
 struct SettingsTile: View {
     let icon: PaneIcon
 
-    private static let side: CGFloat = 78 * iPodBitmap.pointsPerPixel
-    private static let reflectionHeight: CGFloat = 43 * iPodBitmap.pointsPerPixel
+    private static let side: CGFloat = 78 * iPlayrScreen.pointsPerPixel
+    private static let reflectionHeight: CGFloat = 43 * iPlayrScreen.pointsPerPixel
 
     var body: some View {
         VStack(spacing: 1) {

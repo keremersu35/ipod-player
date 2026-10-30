@@ -2,6 +2,7 @@ import SwiftUI
 
 struct iPlayrScreen: View {
     static let screenHeight: CGFloat = 300
+    static let pointsPerPixel: CGFloat = screenHeight / 240
     private static let pushAnimation: Animation = .easeInOut(duration: 0.28)
 
     @State private var menu = NavigationLayer(root: .home)

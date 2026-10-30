@@ -50,8 +50,3 @@ from the Sign In menu entry.
 ## Contributing
 
 Issues and pull requests are welcome. Please keep changes focused and match the surrounding style.
-
-## Credits
-
-The Now Playing shuffle, repeat and volume bitmaps come from the iPod classic firmware, via the
-[osos-lab / RepriseOS](https://github.com/lgreitis/osos-lab) project (GPL-3.0). The original artwork is © Apple Inc.

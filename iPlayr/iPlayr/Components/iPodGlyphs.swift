@@ -74,24 +74,3 @@ private struct ChevronShape: Shape {
         return path
     }
 }
-
-struct iPodBitmap: View {
-    static let pointsPerPixel = iPlayrScreen.screenHeight / 240
-
-    let name: String
-    let pixelSize: CGSize
-
-    var body: some View {
-        Image(name)
-            .resizable()
-            .interpolation(.high)
-            .renderingMode(.template)
-            .frame(width: pixelSize.width * Self.pointsPerPixel, height: pixelSize.height * Self.pointsPerPixel)
-    }
-
-    static let shuffle = iPodBitmap(name: ImageNames.Custom.nowPlayingShuffle, pixelSize: CGSize(width: 18, height: 14))
-    static let repeatAll = iPodBitmap(name: ImageNames.Custom.nowPlayingRepeat, pixelSize: CGSize(width: 19, height: 15))
-    static let repeatOne = iPodBitmap(name: ImageNames.Custom.nowPlayingRepeatOnce, pixelSize: CGSize(width: 19, height: 15))
-    static let volumeLow = iPodBitmap(name: ImageNames.Custom.volumeLow, pixelSize: CGSize(width: 9, height: 17))
-    static let volumeHigh = iPodBitmap(name: ImageNames.Custom.volumeHigh, pixelSize: CGSize(width: 19, height: 17))
-}

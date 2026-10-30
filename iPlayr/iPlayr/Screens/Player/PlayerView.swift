@@ -256,17 +256,18 @@ struct PlayerView: View {
     private var playbackModeIcons: some View {
         HStack(spacing: 6) {
             if playerManager.shuffleMode != .off {
-                iPodBitmap.shuffle
+                Image(systemName: ImageNames.System.shuffle)
             }
             switch playerManager.repeatMode {
             case .all:
-                iPodBitmap.repeatAll
+                Image(systemName: ImageNames.System.repeatAll)
             case .one:
-                iPodBitmap.repeatOne
+                Image(systemName: ImageNames.System.repeatOne)
             default:
                 EmptyView()
             }
         }
+        .font(.system(size: 13, weight: .heavy))
         .foregroundColor(.black)
         .frame(height: 19)
     }

@@ -4,6 +4,8 @@ struct ImageNames {
         static let musicNote = "music.note"
         static let xCircle = "x.circle"
         static let musicNoteList = "music.note.list"
+        static let speakerLow = "speaker.fill"
+        static let speakerHigh = "speaker.wave.3.fill"
         static let shuffle = "shuffle"
         static let repeatAll = "repeat"
         static let repeatOne = "repeat.1"
@@ -17,10 +19,5 @@ struct ImageNames {
         static let lightThemeButton = "light_theme_button"
         static let darkThemeButton = "dark_theme_button"
         static let anodizedGrain = "anodizedGrain"
-        static let nowPlayingShuffle = "nowPlayingShuffle"
-        static let nowPlayingRepeat = "nowPlayingRepeat"
-        static let nowPlayingRepeatOnce = "nowPlayingRepeatOnce"
-        static let volumeLow = "volumeLow"
-        static let volumeHigh = "volumeHigh"
     }
 }
