@@ -8,38 +8,44 @@ struct Menu: Identifiable, Equatable {
 }
 
 struct MenuItemView: View {
+    static let rowHeight: CGFloat = 31
+
     var menu: Menu
     var isSelected: Bool
 
     var body: some View {
         HStack {
             Text(menu.name)
-                .font(.system(size: 16))
-                .fontWeight(.bold)
+                .font(.iPod(iPodTypeScale.menuRow))
                 .lineLimit(1)
             Spacer()
             if let value = menu.value {
                 Text(value)
-                    .font(.system(size: 14))
+                    .font(.iPod(iPodTypeScale.menuValue))
                     .foregroundStyle(isSelected ? .white : .blue)
             } else if menu.next && isSelected {
-                Image(systemName: ImageNames.System.chevronRight)
-                    .font(.system(size: 14, weight: .heavy))
+                ChevronGlyph()
             }
         }
         .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .frame(height: Self.rowHeight)
         .foregroundColor(isSelected ? .white : .black)
-        .background(
-            Group {
-                if isSelected {
-                    SelectedRowBackground()
-                } else {
-                    Rectangle()
-                        .fill(.white)
-                }
+        .background(SelectionBackground(isSelected: isSelected))
+    }
+}
+
+struct SelectionBackground: View {
+    let isSelected: Bool
+
+    var body: some View {
+        Group {
+            if isSelected {
+                SelectedRowBackground()
+            } else {
+                Rectangle()
+                    .fill(.white)
             }
-        )
+        }
     }
 }
 

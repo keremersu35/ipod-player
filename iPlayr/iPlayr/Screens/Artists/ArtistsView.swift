@@ -14,7 +14,8 @@ struct ArtistsView: View {
             load: loadArtists,
             onSelect: { artist, _ in
                 navigate(.push(.artistAlbums(artist: CollectionInfoModel(id: artist.id, title: artist.title))))
-            }
+            },
+            indexTitle: { $0.title }
         ) { artist, isSelected in
             MenuItemView(menu: Menu(name: artist.title, next: isSelected), isSelected: isSelected)
         }

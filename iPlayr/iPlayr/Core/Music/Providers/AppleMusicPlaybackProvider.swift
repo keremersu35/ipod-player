@@ -49,7 +49,7 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
                 throw MusicPlayerError.invalidTrackIndex(index: fromIndex, totalTracks: entries.count)
             }
             musicPlayer.queue = ApplicationMusicPlayer.Queue(playlist: playlist, startingAt: entries[fromIndex])
-        case .allSongs, .composer, .shuffleAll:
+        case .allSongs, .composer, .shuffleAll, .onTheGo:
             try await queueSongs(items, fromIndex: fromIndex)
         }
         observeQueue()
@@ -182,7 +182,7 @@ final class AppleMusicPlaybackProvider: PlaybackProvider {
         } else {
             queuePosition = nil
         }
-        shuffleMode = musicPlayer.state.shuffleMode == .songs ? .songs : .off
+        shuffleMode = shuffleMode == .albums ? .albums : (musicPlayer.state.shuffleMode == .songs ? .songs : .off)
         switch musicPlayer.state.repeatMode {
         case .one: repeatMode = .one
         case .all: repeatMode = .all

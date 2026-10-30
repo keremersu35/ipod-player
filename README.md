@@ -10,10 +10,10 @@ rather than eyeballed.
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange)](https://swift.org)
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/5ba23608-a129-43af-8e5a-40420519c92c" width="200" />
-  <img src="https://github.com/user-attachments/assets/bd7c1f93-0704-4079-af60-5928f0042f54" width="200" />
-  <img src="https://github.com/user-attachments/assets/ce615eb9-0662-4f1a-953a-cd76972d2c66" width="200" />
-  <img src="https://github.com/user-attachments/assets/3c4a05a6-f250-46cd-8206-04ecc6ea716a" width="200" />
+  <img src="docs/showcase/coverFlow.gif" width="200" alt="Browsing Cover Flow and flipping an album" />
+  <img src="docs/showcase/coverFlowPlay.gif" width="200" alt="Playing a song from Cover Flow" />
+  <img src="docs/showcase/albums.gif" width="200" alt="Playing an album from the Albums list" />
+  <img src="docs/showcase/themes.gif" width="200" alt="Switching between the Silver, Black and U2 themes" />
 </div>
 
 <div align="center">
@@ -54,3 +54,8 @@ from the Sign In menu entry.
 ## Contributing
 
 Issues and pull requests are welcome. Please keep changes focused and match the surrounding style.
+
+## Credits
+
+The Now Playing shuffle, repeat and volume bitmaps come from the iPod classic firmware, via the
+[osos-lab / RepriseOS](https://github.com/lgreitis/osos-lab) project (GPL-3.0). The original artwork is © Apple Inc.

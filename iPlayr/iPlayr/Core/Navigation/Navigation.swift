@@ -63,6 +63,7 @@ enum PlaybackSource: Hashable, Sendable {
     case composer(name: String)
     case allSongs
     case shuffleAll
+    case onTheGo
 }
 
 enum Route: Hashable, Identifiable, Sendable {
@@ -79,6 +80,15 @@ enum Route: Hashable, Identifiable, Sendable {
     case albumTracks(album: CollectionInfoModel)
     case composerSongs(composer: String)
     case about
+    case legal
+    case search
+    case onTheGo
+    case extras
+    case clocks
+    case stopwatch
+    case screenLock
+    case volumeLimit
+    case resetSettings
     case brightness
     case menuCustomization(isMainMenu: Bool)
     case signIn
@@ -95,11 +105,12 @@ extension Route {
     var isFullScreen: Bool {
         switch self {
         case .home, .music, .settings, .signIn, .theme,
-             .about, .brightness, .menuCustomization:
+             .brightness, .menuCustomization, .extras, .volumeLimit:
             return false
         case .playlists, .artists, .albums, .songs, .genres, .composers,
              .artistAlbums, .playlistTracks, .albumTracks, .composerSongs,
-             .coverFlow, .player, .nowPlaying:
+             .coverFlow, .player, .nowPlaying, .about, .legal, .resetSettings,
+             .search, .onTheGo, .clocks, .stopwatch, .screenLock:
             return true
         }
     }
@@ -133,6 +144,24 @@ extension Route {
             ComposerSongsView(composer: composer)
         case .about:
             AboutView()
+        case .legal:
+            LegalView()
+        case .search:
+            SearchView()
+        case .onTheGo:
+            OnTheGoView()
+        case .extras:
+            ExtrasView()
+        case .clocks:
+            ClockView()
+        case .stopwatch:
+            StopwatchView()
+        case .screenLock:
+            ScreenLockView()
+        case .volumeLimit:
+            VolumeLimitView()
+        case .resetSettings:
+            ResetSettingsView()
         case .brightness:
             BrightnessView()
         case .menuCustomization(let isMainMenu):

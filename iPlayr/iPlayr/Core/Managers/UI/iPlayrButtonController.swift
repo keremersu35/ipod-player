@@ -4,7 +4,7 @@ import AudioToolbox
 import Observation
 
 enum ButtonAction: Hashable, Sendable {
-    case menu, forwardEndAlt, backwardEndAlt, playPause, select
+    case menu, forwardEndAlt, backwardEndAlt, playPause, select, selectLongPress
     case forwardLongPress, backwardLongPress, forwardLongPressEnd, backwardLongPressEnd
 }
 
@@ -15,6 +15,8 @@ final class iPlayrButtonController {
 
     @ObservationIgnored private var globalPlaybackHandler: ((ButtonAction) -> Void)?
     @ObservationIgnored var onMenuLongPress: (() -> Void)?
+    var isInputLocked = false
+    @ObservationIgnored private var activityHandlers: [UUID: () -> Void] = [:]
 
     @ObservationIgnored private let selectionFeedback = UISelectionFeedbackGenerator()
     @ObservationIgnored private let impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -32,6 +34,14 @@ final class iPlayrButtonController {
 
     func activate(_ scope: FocusScope) {
         activeScope = scope
+    }
+
+    func observeActivity(_ id: UUID, handler: (() -> Void)?) {
+        activityHandlers[id] = handler
+    }
+
+    private func notifyActivity() {
+        for handler in activityHandlers.values { handler() }
     }
 
     func setGlobalPlaybackHandler(_ handler: @escaping (ButtonAction) -> Void) {
@@ -56,7 +66,8 @@ final class iPlayrButtonController {
     }
 
     private func handleInput(_ action: ButtonAction) {
-        if action == .menu || action == .select {
+        notifyActivity()
+        if action == .menu || action == .select || action == .selectLongPress {
             guard consumeDebounce() else { return }
             playPressFeedback()
         }
@@ -76,12 +87,14 @@ final class iPlayrButtonController {
     func menuButtonPressed() { handleInput(.menu) }
 
     func menuLongPressed() {
-        guard consumeDebounce() else { return }
+        notifyActivity()
+        guard !isInputLocked, consumeDebounce() else { return }
         playPressFeedback()
         onMenuLongPress?()
     }
 
     func selectButtonPressed() { handleInput(.select) }
+    func selectLongPressed() { handleInput(.selectLongPress) }
     func forwardEndAltButtonPressed() { handleInput(.forwardEndAlt) }
     func backwardEndAltButtonPressed() { handleInput(.backwardEndAlt) }
     func playPauseButtonPressed() { handleInput(.playPause) }
@@ -92,6 +105,7 @@ final class iPlayrButtonController {
     func backwardLongPressEnded() { handleInput(.backwardLongPressEnd) }
 
     func scrollUp() {
+        notifyActivity()
         guard let scope = activeScope, scope.moveUp() else { return }
         if hapticsEnabled {
             selectionFeedback.selectionChanged()
@@ -100,6 +114,7 @@ final class iPlayrButtonController {
     }
 
     func scrollDown() {
+        notifyActivity()
         guard let scope = activeScope, scope.moveDown() else { return }
         if hapticsEnabled {
             selectionFeedback.selectionChanged()

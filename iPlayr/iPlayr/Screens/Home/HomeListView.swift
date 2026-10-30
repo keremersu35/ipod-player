@@ -16,6 +16,7 @@ struct HomeListView: View {
             (Menu(name: $0.title, next: true), $0.route)
         }
         entries += [
+            (.init(name: String(localized: "Extras"), next: true), .extras),
             (.init(name: String(localized: "Settings"), next: true), .settings),
             (.init(name: String(localized: "Shuffle Songs"), next: false), .player(source: .shuffleAll, trackIndex: 0)),
         ]

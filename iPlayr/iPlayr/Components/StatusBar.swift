@@ -12,8 +12,7 @@ struct StatusBar: View {
             HStack(alignment: .center) {
                 Text(title)
                     .foregroundColor(.black)
-                    .font(.system(size: 14))
-                    .fontWeight(.bold)
+                    .font(.iPod(iPodTypeScale.statusTitle))
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if playerManager.isPlaying || playerManager.isPaused {
                     Image(playerManager.isPlaying ? ImageNames.Custom.play : ImageNames.Custom.pause)

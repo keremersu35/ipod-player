@@ -4,5 +4,12 @@ public enum UserDefaultsKeys: String {
     case soundsEnabled = "soundsEnabled"
     case musicMenuItems = "musicMenuItems"
     case mainMenuShortcuts = "mainMenuShortcuts"
+    case knownMusicMenuItems = "knownMusicMenuItems"
     case activeMusicProvider = "activeMusicProvider"
+    case onTheGoItems = "onTheGoItems"
+    case trackRatings = "trackRatings"
+    case volumeLimit = "volumeLimit"
+    case backlightTimer = "backlightTimer"
+    case screenLockCombination = "screenLockCombination"
+    case deviceLayout = "deviceLayout"
 }

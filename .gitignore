@@ -65,3 +65,9 @@ iPlayr/iPlayr.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolve
 
 # Tooling
 .serena/
+
+# Showcase recordings
+build/
+iPlayr/iPlayr/Core/Showcase/
+scripts/record-showcase.sh
+scripts/make-showcase-gif.sh

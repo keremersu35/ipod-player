@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct CollectionMenuItem: View {
+    static let rowHeight: CGFloat = 50
+
     var item: LibraryItem
     var isSelected: Bool
 
@@ -9,31 +11,21 @@ struct CollectionMenuItem: View {
             artworkView
             VStack(alignment: .leading) {
                 Text(item.title)
-                    .font(.system(size: 16))
-                    .fontWeight(.bold)
+                    .font(.iPod(iPodTypeScale.listTitle))
+                    .lineLimit(1)
                 Text(item.subtitle)
-                    .font(.system(size: 14))
-                    .fontWeight(.regular)
+                    .font(.iPod(iPodTypeScale.listSubtitle, bold: false))
+                    .lineLimit(1)
             }
             Spacer()
             if isSelected {
-                Image(systemName: ImageNames.System.chevronRight)
-                    .font(.system(size: 14))
+                ChevronGlyph()
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: 50)
+        .frame(maxWidth: .infinity, maxHeight: Self.rowHeight)
         .padding(.trailing, 8)
         .foregroundColor(isSelected ? .white : .black)
-        .background(
-            Group {
-                if isSelected {
-                    SelectedRowBackground()
-                } else {
-                    Rectangle()
-                        .fill(.white)
-                }
-            }
-        )
+        .background(SelectionBackground(isSelected: isSelected))
     }
 
     private var artworkView: some View {

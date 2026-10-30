@@ -26,7 +26,7 @@ struct MenuCustomizationView: View {
                 }
                 .scrollIndicators(.hidden)
                 .onChange(of: scope.selection) { _, newIndex in
-                    proxy.scrollTo(newIndex)
+                    proxy.jump(to: newIndex)
                 }
             }
         }

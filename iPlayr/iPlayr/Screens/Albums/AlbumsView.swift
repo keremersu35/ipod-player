@@ -9,6 +9,7 @@ struct AlbumsView: View {
             title: String(localized: "Albums"),
             scopeID: "albums",
             emptyMessage: String(localized: "No albums found\nAdd some albums to your library"),
+            rowHeight: CollectionMenuItem.rowHeight,
             cached: { libraryStore.albums },
             load: {
                 await libraryStore.loadAlbumsIfNeeded()
@@ -16,7 +17,8 @@ struct AlbumsView: View {
             },
             onSelect: { album, _ in
                 navigate(.push(.albumTracks(album: CollectionInfoModel(id: album.id, title: album.title))))
-            }
+            },
+            indexTitle: { $0.title }
         ) { album, isSelected in
             CollectionMenuItem(item: album, isSelected: isSelected)
         }

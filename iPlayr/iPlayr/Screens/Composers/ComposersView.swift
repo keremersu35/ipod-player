@@ -16,7 +16,8 @@ struct ComposersView: View {
             },
             onSelect: { composer, _ in
                 navigate(.push(.composerSongs(composer: composer.id)))
-            }
+            },
+            indexTitle: { $0.title }
         ) { composer, isSelected in
             MenuItemView(menu: Menu(name: composer.title, next: isSelected), isSelected: isSelected)
         }

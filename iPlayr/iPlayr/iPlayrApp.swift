@@ -9,6 +9,8 @@ struct iPlayrApp: App {
     @State private var authManager: MusicAccountManager
     @State private var libraryStore: MusicLibraryStore
     @State private var menuPreferences = MenuPreferences()
+    @State private var onTheGo = OnTheGoStore()
+    @State private var ratings = RatingStore()
 
     init() {
         UIDevice.current.isBatteryMonitoringEnabled = true
@@ -27,6 +29,8 @@ struct iPlayrApp: App {
                 .environment(authManager)
                 .environment(libraryStore)
                 .environment(menuPreferences)
+                .environment(onTheGo)
+                .environment(ratings)
                 .onReceive(NotificationCenter.default.publisher(for: .MPMediaLibraryDidChange)) { _ in
                     Task { await libraryStore.invalidate() }
                 }

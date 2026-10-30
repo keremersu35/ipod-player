@@ -3,6 +3,8 @@ import SwiftUI
 enum NowPlayingMode: CaseIterable {
     case progress
     case scrubber
+    case rating
+    case shuffle
 
     var next: NowPlayingMode {
         let all = Self.allCases
@@ -139,12 +141,10 @@ struct VolumeBarView: View {
 
     var body: some View {
         NowPlayingBar(progress: Double(level)) {
-            Image(systemName: ImageNames.System.speakerLow)
-                .font(.system(size: 12))
+            iPodBitmap.volumeLow
                 .foregroundColor(.black)
         } trailing: {
-            Image(systemName: ImageNames.System.speakerHigh)
-                .font(.system(size: 12))
+            iPodBitmap.volumeHigh
                 .foregroundColor(.black)
         }
     }
@@ -164,5 +164,100 @@ struct TimeLabel: View {
 
     private var formatted: String {
         String(format: "%02d:%02d", seconds / 60, seconds % 60)
+    }
+}
+
+struct RatingBarView: View {
+    let rating: Int
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ForEach(1...RatingStore.maxRating, id: \.self) { star in
+                Image(systemName: star <= rating ? "star.fill" : "circle.fill")
+                    .font(.system(size: star <= rating ? 18 : 5))
+                    .foregroundStyle(star <= rating ? Color.black : Color.gray.opacity(0.6))
+                    .frame(width: 22, height: 22)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: NowPlayingBarMetrics.height)
+    }
+}
+
+struct ShuffleBarView: View {
+    let mode: ShuffleMode
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Shuffle")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.black)
+            HStack(spacing: 0) {
+                ForEach(ShuffleMode.allCases, id: \.self) { option in
+                    Text(option.title)
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(option == mode ? .white : .black)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background {
+                            if option == mode { SelectedRowBackground() }
+                        }
+                }
+            }
+            .frame(height: 24)
+            .background(RoundedRectangle(cornerRadius: 5).fill(.white))
+            .clipShape(RoundedRectangle(cornerRadius: 5))
+            .overlay(RoundedRectangle(cornerRadius: 5).stroke(.gray.opacity(0.6), lineWidth: 1))
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: NowPlayingBarMetrics.height)
+    }
+}
+
+struct ContextMenuOverlay: View {
+    let title: String
+    let options: [String]
+    let selection: Int
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.35)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            VStack(spacing: 0) {
+                Text(title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.black)
+                    .lineLimit(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 8)
+                    .frame(height: 24)
+                    .background(LinearGradient(colors: [.statusBar1, .statusBar4], startPoint: .top, endPoint: .bottom))
+                ForEach(options.indices, id: \.self) { index in
+                    MenuItemView(menu: Menu(name: options[index], next: false), isSelected: index == selection)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(.black.opacity(0.5), lineWidth: 1))
+            .shadow(color: .black.opacity(0.4), radius: 8, y: 4)
+            .padding(.horizontal, 36)
+        }
+    }
+}
+
+struct IdleClockView: View {
+    var body: some View {
+        TimelineView(.everyMinute) { context in
+            VStack(spacing: 6) {
+                Text(context.date.formatted(date: .omitted, time: .shortened))
+                    .font(.system(size: 64, weight: .bold))
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.5)
+                Text(context.date.formatted(.dateTime.weekday(.wide).day().month(.wide)))
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.gray)
+            }
+            .foregroundStyle(.black)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.white)
+        }
     }
 }

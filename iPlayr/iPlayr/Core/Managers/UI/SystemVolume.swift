@@ -14,13 +14,17 @@ enum SystemVolume {
         return volumeView.subviews.compactMap { $0 as? UISlider }.first
     }
 
+    static var limit: Float {
+        UserDefaults.standard.object(forKey: UserDefaultsKeys.volumeLimit.rawValue) as? Float ?? 1
+    }
+
     static var level: Float {
         AVAudioSession.sharedInstance().outputVolume
     }
 
     static func adjust(by delta: Float) -> Float? {
         guard let slider else { return nil }
-        let target = min(max(slider.value + delta, 0), 1)
+        let target = min(max(slider.value + delta, 0), limit)
         guard target != slider.value else { return nil }
         slider.value = target
         slider.sendActions(for: .valueChanged)

@@ -69,11 +69,11 @@ struct SongListView: View {
                     }
                 }
                 .onChange(of: scope.selection) { _, newIndex in
-                    proxy.scrollTo(newIndex)
+                    proxy.jump(to: newIndex)
                 }
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        proxy.scrollTo(scope.selection)
+                        proxy.jump(to: scope.selection)
                     }
                 }
             }

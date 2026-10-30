@@ -9,6 +9,7 @@ enum MusicMenuItem: String, CaseIterable, Sendable {
     case songs
     case genres
     case composers
+    case search
 
     var title: String {
         switch self {
@@ -19,6 +20,7 @@ enum MusicMenuItem: String, CaseIterable, Sendable {
         case .songs: return String(localized: "Songs")
         case .genres: return String(localized: "Genres")
         case .composers: return String(localized: "Composers")
+        case .search: return String(localized: "Search")
         }
     }
 
@@ -31,6 +33,7 @@ enum MusicMenuItem: String, CaseIterable, Sendable {
         case .songs: return .songs
         case .genres: return .genres
         case .composers: return .composers
+        case .search: return .search
         }
     }
 }
@@ -46,6 +49,17 @@ final class MenuPreferences {
     init() {
         musicMenu = Self.read(UserDefaultsKeys.musicMenuItems.rawValue, default: MusicMenuItem.allCases)
         mainMenuShortcuts = Self.read(UserDefaultsKeys.mainMenuShortcuts.rawValue, default: [])
+        addItemsIntroducedSinceLastLaunch()
+    }
+
+    private func addItemsIntroducedSinceLastLaunch() {
+        let known = Self.read(UserDefaultsKeys.knownMusicMenuItems.rawValue, default: MusicMenuItem.allCases.filter { $0 != .search })
+        let introduced = MusicMenuItem.allCases.filter { !known.contains($0) }
+        if !introduced.isEmpty {
+            musicMenu = MusicMenuItem.allCases.filter { musicMenu.contains($0) || introduced.contains($0) }
+            write(musicMenu, forKey: UserDefaultsKeys.musicMenuItems.rawValue)
+        }
+        write(MusicMenuItem.allCases, forKey: UserDefaultsKeys.knownMusicMenuItems.rawValue)
     }
 
     func isInMusicMenu(_ item: MusicMenuItem) -> Bool { musicMenu.contains(item) }

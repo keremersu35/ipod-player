@@ -10,6 +10,7 @@ struct ArtistAlbumsView: View {
             title: artist.title,
             scopeID: "artistAlbums",
             emptyMessage: String(localized: "No albums found for this artist"),
+            rowHeight: CollectionMenuItem.rowHeight,
             cached: { libraryStore.cachedArtistAlbums(id: artist.id) },
             load: { await libraryStore.artistAlbums(id: artist.id) },
             onSelect: { album, _ in

@@ -12,7 +12,8 @@ final class WheelTracker {
 }
 
 struct iPlayrButtons: View {
-    private static let wheelDiameterRatio: CGFloat = 0.79
+    static let wheelDiameterRatio: CGFloat = 0.79
+    static let glyphHeightRatio: CGFloat = 0.049
 
     @State private var wheel = WheelTracker()
     @Environment(iPlayrButtonController.self) private var buttonController
@@ -22,6 +23,7 @@ struct iPlayrButtons: View {
         GeometryReader { geometry in
             let size = geometry.size.width
             let buttonOffset = size * 0.32
+            let glyphHeight = size * Self.wheelDiameterRatio * Self.glyphHeightRatio
 
             ZStack {
                 Circle()
@@ -39,20 +41,26 @@ struct iPlayrButtons: View {
 
                 Image(theme.currentTheme.wheelInnerAppearance)
                     .resizable()
+                    .brightness(theme.currentTheme.centerButtonBrightness)
+                    .overlay {
+                        AnodizedGrain(opacity: theme.currentTheme.grainOpacity)
+                            .clipShape(Circle())
+                    }
                     .frame(width: size * 0.29, height: size * 0.29)
                     .onTapGesture { buttonController.selectButtonPressed() }
+                    .onLongPressGesture(minimumDuration: 0.6) { buttonController.selectLongPressed() }
                     .accessibilityLabel("Select")
                     .accessibilityAddTraits(.isButton)
 
-                makeTextButton("MENU", offset: -buttonOffset,
+                makeTextButton("MENU", glyphHeight: glyphHeight, offset: -buttonOffset,
                                onTap: { buttonController.menuButtonPressed() },
                                onLongPress: { buttonController.menuLongPressed() })
-                makeIconButton(imageName: ImageNames.System.playPause, accessibilityLabel: "Play or pause", offsetY: buttonOffset) { buttonController.playPauseButtonPressed() }
-                makeSeekButton(imageName: ImageNames.System.forwardEndAlt, accessibilityLabel: "Next track", offsetX: buttonOffset,
+                makeIconButton(kind: .playPause, glyphHeight: glyphHeight, accessibilityLabel: "Play or pause", offsetY: buttonOffset) { buttonController.playPauseButtonPressed() }
+                makeSeekButton(kind: .next, glyphHeight: glyphHeight, accessibilityLabel: "Next track", offsetX: buttonOffset,
                              onTap: { buttonController.forwardEndAltButtonPressed() },
                              onLongPressStart: { buttonController.forwardLongPressStarted() },
                              onLongPressEnd: { buttonController.forwardLongPressEnded() })
-                makeSeekButton(imageName: ImageNames.System.backwardEndAlt, accessibilityLabel: "Previous track", offsetX: -buttonOffset,
+                makeSeekButton(kind: .previous, glyphHeight: glyphHeight, accessibilityLabel: "Previous track", offsetX: -buttonOffset,
                              onTap: { buttonController.backwardEndAltButtonPressed() },
                              onLongPressStart: { buttonController.backwardLongPressStarted() },
                              onLongPressEnd: { buttonController.backwardLongPressEnded() })
@@ -94,18 +102,18 @@ struct iPlayrButtons: View {
     }
     
     @ViewBuilder
-    private func makeIconButton(imageName: String, accessibilityLabel: LocalizedStringKey, offsetX: CGFloat = 0, offsetY: CGFloat = 0, action: @escaping () -> Void) -> some View {
-        iPlayrIconButton(imageName: imageName, accessibilityLabel: accessibilityLabel, onTapAction: action)
+    private func makeIconButton(kind: WheelGlyphKind, glyphHeight: CGFloat, accessibilityLabel: LocalizedStringKey, offsetX: CGFloat = 0, offsetY: CGFloat = 0, action: @escaping () -> Void) -> some View {
+        iPlayrIconButton(kind: kind, glyphHeight: glyphHeight, accessibilityLabel: accessibilityLabel, onTapAction: action)
             .offset(x: offsetX, y: offsetY)
             .environment(theme)
     }
 
     @ViewBuilder
-    private func makeSeekButton(imageName: String, accessibilityLabel: LocalizedStringKey, offsetX: CGFloat = 0, offsetY: CGFloat = 0,
+    private func makeSeekButton(kind: WheelGlyphKind, glyphHeight: CGFloat, accessibilityLabel: LocalizedStringKey, offsetX: CGFloat = 0, offsetY: CGFloat = 0,
                                onTap: @escaping () -> Void,
                                onLongPressStart: @escaping () -> Void,
                                onLongPressEnd: @escaping () -> Void) -> some View {
-        iPlayrSeekButton(imageName: imageName,
+        iPlayrSeekButton(kind: kind, glyphHeight: glyphHeight,
                         accessibilityLabel: accessibilityLabel,
                         onTapAction: onTap,
                         onLongPressStart: onLongPressStart,
@@ -115,11 +123,11 @@ struct iPlayrButtons: View {
     }
 
     @ViewBuilder
-    private func makeTextButton(_ text: LocalizedStringKey, offset: CGFloat,
+    private func makeTextButton(_ text: LocalizedStringKey, glyphHeight: CGFloat, offset: CGFloat,
                                 onTap: @escaping () -> Void,
                                 onLongPress: @escaping () -> Void) -> some View {
         Text(text)
-            .font(.system(size: 16, weight: .bold))
+            .font(.system(size: glyphHeight * 1.3, weight: .bold))
             .foregroundColor(theme.currentTheme.wheelIconTint)
             .padding(20)
             .contentShape(Rectangle())
@@ -133,16 +141,16 @@ struct iPlayrButtons: View {
 }
 
 struct iPlayrIconButton: View {
-    let imageName: String
+    let kind: WheelGlyphKind
+    let glyphHeight: CGFloat
     let accessibilityLabel: LocalizedStringKey
     let onTapAction: () -> Void
     @Environment(ThemeManager.self) private var theme
 
     var body: some View {
-        Image(systemName: imageName)
-            .resizable()
-            .frame(width: 24, height: 12)
-            .foregroundColor(theme.currentTheme.wheelIconTint)
+        WheelGlyph(kind: kind)
+            .fill(theme.currentTheme.wheelIconTint)
+            .frame(width: glyphHeight * kind.aspectRatio, height: glyphHeight)
             .padding(20)
             .contentShape(Rectangle())
             .onTapGesture(perform: onTapAction)
@@ -152,7 +160,8 @@ struct iPlayrIconButton: View {
 }
 
 struct iPlayrSeekButton: View {
-    let imageName: String
+    let kind: WheelGlyphKind
+    let glyphHeight: CGFloat
     let accessibilityLabel: LocalizedStringKey
     let onTapAction: () -> Void
     let onLongPressStart: () -> Void
@@ -161,10 +170,9 @@ struct iPlayrSeekButton: View {
     @State private var isPressed: Bool = false
 
     var body: some View {
-        Image(systemName: imageName)
-            .resizable()
-            .frame(width: 24, height: 12)
-            .foregroundColor(theme.currentTheme.wheelIconTint)
+        WheelGlyph(kind: kind)
+            .fill(theme.currentTheme.wheelIconTint)
+            .frame(width: glyphHeight * kind.aspectRatio, height: glyphHeight)
             .padding(20)
             .contentShape(Rectangle())
             .scaleEffect(isPressed ? 0.9 : 1.0)
@@ -183,3 +191,4 @@ struct iPlayrSeekButton: View {
             .accessibilityAddTraits(.isButton)
     }
 }
+

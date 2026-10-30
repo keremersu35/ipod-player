@@ -1,12 +1,14 @@
 import SwiftUI
 
 struct iPlayrScreen: View {
-    private static let screenHeight: CGFloat = 300
+    static let screenHeight: CGFloat = 300
     private static let pushAnimation: Animation = .easeInOut(duration: 0.28)
 
     @State private var menu = NavigationLayer(root: .home)
     @State private var fullScreen = NavigationLayer()
     @State private var isNavigating = false
+    @State private var infoPane: InfoPaneContent?
+    @State private var backlight = InactivityTimer()
     @Environment(iPlayrButtonController.self) private var iPlayrController
 
     private var isFullScreen: Bool { !fullScreen.isEmpty }
@@ -16,6 +18,14 @@ struct iPlayrScreen: View {
             contentView(geometry: geometry)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .frame(height: Self.screenHeight)
+                .overlay {
+                    if backlight.hasElapsed {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(.black.opacity(0.55))
+                            .allowsHitTesting(false)
+                            .transition(.opacity)
+                    }
+                }
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
                         .stroke(lineWidth: 6)
@@ -26,6 +36,16 @@ struct iPlayrScreen: View {
         .onNavigate(handleNavigation)
         .onAppear {
             iPlayrController.onMenuLongPress = { handleNavigation(.popToRoot) }
+            let backlight = backlight
+            let wake = {
+                backlight.restart(
+                    after: BacklightTimer.current.timeout,
+                    wakeAnimation: .easeOut(duration: 0.15),
+                    elapseAnimation: .easeInOut(duration: 0.6)
+                )
+            }
+            iPlayrController.observeActivity(backlight.id, handler: wake)
+            wake()
         }
     }
 
@@ -45,11 +65,18 @@ struct iPlayrScreen: View {
     }
 
     private func splitScreenView(width: CGFloat, halfWidth: CGFloat) -> some View {
-        HStack(spacing: 0) {
+        let infoPaneBinding = $infoPane
+        return HStack(spacing: 0) {
             layerView($menu, width: halfWidth)
                 .offset(x: isFullScreen ? -halfWidth : 0)
+                .onPreferenceChange(InfoPanePreferenceKey.self) { infoPaneBinding.wrappedValue = $0 }
 
-            RightImageView(isActive: !isFullScreen)
+            RightImageView(isActive: !isFullScreen && infoPane == nil)
+                .overlay {
+                    if let infoPane {
+                        InfoPaneView(content: infoPane)
+                    }
+                }
                 .frame(width: halfWidth, height: Self.screenHeight)
                 .clipped()
                 .offset(x: isFullScreen ? halfWidth : 0)
@@ -64,6 +91,9 @@ struct iPlayrScreen: View {
                     .frame(width: width, height: Self.screenHeight)
                     .offset(x: layer.wrappedValue.offset(forEntryAt: index, width: width))
                     .zIndex(Double(index))
+                    .transformPreference(InfoPanePreferenceKey.self) { value in
+                        if !layer.wrappedValue.isTopEntry(at: index) { value = nil }
+                    }
                     .onAppear {
                         guard layer.wrappedValue.isTopEntry(at: index) else { return }
                         settle(layer)

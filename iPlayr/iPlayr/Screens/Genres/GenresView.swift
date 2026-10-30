@@ -16,7 +16,8 @@ struct GenresView: View {
             },
             onSelect: { genre, _ in
                 navigate(.push(.artists(genre: CollectionInfoModel(id: genre.id, title: genre.title))))
-            }
+            },
+            indexTitle: { $0.title }
         ) { genre, isSelected in
             MenuItemView(menu: Menu(name: genre.title, next: isSelected), isSelected: isSelected)
         }
