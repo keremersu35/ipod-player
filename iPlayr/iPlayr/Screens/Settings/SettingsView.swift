@@ -7,7 +7,7 @@ struct SettingsView: View {
     @Environment(\.navigate) private var navigate
     @AppStorage(UserDefaultsKeys.hapticsEnabled.rawValue) private var hapticsEnabled: Bool = true
     @AppStorage(UserDefaultsKeys.soundsEnabled.rawValue) private var soundsEnabled: Bool = true
-    @AppStorage(UserDefaultsKeys.deviceLayout.rawValue) private var deviceLayout: DeviceLayout = .fullScreen
+    @AppStorage(UserDefaultsKeys.deviceLayout.rawValue) private var deviceLayout: DeviceLayout = .defaultValue
     @State private var scope = FocusScope(id: "settings")
     @State private var backlight = BacklightTimer.current
 

@@ -5,6 +5,8 @@ enum DeviceLayout: String, CaseIterable, Sendable {
     case fullScreen
     case actualSize
 
+    static let defaultValue: DeviceLayout = .actualSize
+
     var title: String {
         switch self {
         case .fullScreen: return String(localized: "Full Screen")

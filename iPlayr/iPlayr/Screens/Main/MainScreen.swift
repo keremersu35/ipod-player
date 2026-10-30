@@ -4,7 +4,7 @@ struct iPlayrView: View {
     @State private var iPlayrController: iPlayrButtonController = .init()
     @Environment(ThemeManager.self) private var theme
     @Environment(PlaybackController.self) private var playerManager
-    @AppStorage(UserDefaultsKeys.deviceLayout.rawValue) private var deviceLayout: DeviceLayout = .fullScreen
+    @AppStorage(UserDefaultsKeys.deviceLayout.rawValue) private var deviceLayout: DeviceLayout = .defaultValue
 
     private var isActualSize: Bool { deviceLayout == .actualSize }
 

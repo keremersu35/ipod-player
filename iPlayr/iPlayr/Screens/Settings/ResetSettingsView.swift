@@ -8,7 +8,7 @@ struct ResetSettingsView: View {
     @Environment(\.navigate) private var navigate
     @AppStorage(UserDefaultsKeys.hapticsEnabled.rawValue) private var hapticsEnabled: Bool = true
     @AppStorage(UserDefaultsKeys.soundsEnabled.rawValue) private var soundsEnabled: Bool = true
-    @AppStorage(UserDefaultsKeys.deviceLayout.rawValue) private var deviceLayout: DeviceLayout = .fullScreen
+    @AppStorage(UserDefaultsKeys.deviceLayout.rawValue) private var deviceLayout: DeviceLayout = .defaultValue
     @State private var scope = FocusScope(id: "resetSettings")
 
     private enum Choice: Int, CaseIterable {
@@ -97,7 +97,7 @@ struct ResetSettingsView: View {
         soundsEnabled = true
         theme.setTheme(.silver)
         BacklightTimer.current = .defaultValue
-        deviceLayout = .fullScreen
+        deviceLayout = .defaultValue
         UserDefaults.standard.removeObject(forKey: UserDefaultsKeys.volumeLimit.rawValue)
     }
 }

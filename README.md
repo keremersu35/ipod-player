@@ -16,10 +16,6 @@ rather than eyeballed.
   <img src="docs/showcase/themes.gif" width="200" alt="Switching between the Silver, Black and U2 themes" />
 </div>
 
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/07fd3811-a954-42f9-83fe-9dc0c5ce4cac" width="840" height="348" />
-</div>
-
 ## Features
 
 - **Click wheel** — rotate your thumb to scroll, with selection haptics and the original click
