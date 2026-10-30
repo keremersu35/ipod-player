@@ -1,4 +1,4 @@
-# iPlayr
+# iPlayr — iPod Classic for iOS in SwiftUI
 
 A faithful iPod classic recreation for iOS, built entirely in SwiftUI on top of Apple Music.
 
@@ -8,6 +8,7 @@ rather than eyeballed.
 
 [![Platform](https://img.shields.io/badge/platform-iOS%2017%2B-lightgrey)](https://developer.apple.com/ios/)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange)](https://swift.org)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 <div align="center">
   <img src="docs/showcase/coverFlow.gif" width="200" alt="Browsing Cover Flow and flipping an album" />
