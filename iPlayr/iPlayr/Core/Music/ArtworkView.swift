@@ -19,6 +19,11 @@ struct ArtworkView: View {
                 placeholder
             }
             .frame(width: width, height: resolvedHeight)
+        case .asset(let name):
+            Image(name)
+                .resizable()
+                .scaledToFill()
+                .frame(width: width, height: resolvedHeight)
         case nil:
             placeholder
                 .frame(width: width, height: resolvedHeight)

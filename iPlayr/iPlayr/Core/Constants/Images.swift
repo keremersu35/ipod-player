@@ -11,6 +11,7 @@ struct ImageNames {
     
     struct Custom {
         static let coverPlaceholder = "cover_placeholder"
+        static let hotFuss = "hotFuss"
         static let play = "play"
         static let pause = "pause"
         static let lightThemeButton = "light_theme_button"

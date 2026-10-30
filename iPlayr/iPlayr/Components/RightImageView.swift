@@ -15,12 +15,16 @@ struct RightImageView: View {
     private let overscan: CGFloat = 1.25
     private let panFraction: CGFloat = 0.08
 
+    private var isShowcase: Bool {
+        UserDefaults.standard.string(forKey: "showcase") != nil
+    }
+
     var body: some View {
         GeometryReader { proxy in
             ZStack {
                 Color.black
 
-                if !authManager.isAuthorized {
+                if !authManager.isAuthorized && !isShowcase {
                     unauthorizedView
                 } else if !images.isEmpty {
                     artworkSlideshow(images, size: proxy.size)
@@ -38,9 +42,7 @@ struct RightImageView: View {
             }
         }
         .onChange(of: libraryStore.albums, initial: true) { _, albums in
-            images = albums?.compactMap(\.artwork) ?? []
-            if currentImageIndex >= images.count { currentImageIndex = 0 }
-            startImageCycle()
+            updateImages(with: albums)
         }
         .onChange(of: isActive) { _, isNowActive in
             if isNowActive {
@@ -50,6 +52,44 @@ struct RightImageView: View {
             }
         }
         .onDisappear(perform: stopImageCycle)
+    }
+
+    private func updateImages(with albums: [LibraryItem]?) {
+        var list: [ArtworkRef] = []
+
+        if let albums {
+            var matchingArtworks: [ArtworkRef] = []
+            var otherArtworks: [ArtworkRef] = []
+
+            for album in albums {
+                guard let artwork = album.artwork else { continue }
+                if Self.isHotFuss(album) {
+                    matchingArtworks.append(artwork)
+                } else {
+                    otherArtworks.append(artwork)
+                }
+            }
+
+            if !matchingArtworks.isEmpty {
+                list = matchingArtworks + otherArtworks
+            } else {
+                list = [.asset(ImageNames.Custom.hotFuss)] + otherArtworks
+            }
+        } else {
+            list = [.asset(ImageNames.Custom.hotFuss)]
+        }
+
+        images = list
+        if currentImageIndex >= images.count { currentImageIndex = 0 }
+        startImageCycle()
+    }
+
+    private static func isHotFuss(_ item: LibraryItem) -> Bool {
+        let title = item.title.localizedLowercase
+        let subtitle = item.subtitle.localizedLowercase
+        return title.contains("hot fuss") ||
+               title.contains("brightside") ||
+               (subtitle.contains("the killers") && title.contains("fuss"))
     }
 
     private func loadAlbumsIfAuthorized() async {
